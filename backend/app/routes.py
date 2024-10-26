@@ -43,7 +43,7 @@ def create():
             'message': 'Item created successfully',
             'result': new_item.to_dict()
         }
-        publish_message_async({'op': 'create', 'id': id, 'title': data['title'], 'content': data['content']})
+        publish_message_async(jsonify({'op': 'create', 'id': id, 'title': data['title'], 'content': data['content']}))
         return jsonify(response), 201
     except (KeyError, TypeError) as e:
         app.logger.error(f"Invalid input: {e}")
@@ -94,7 +94,7 @@ def update():
         item.title = data['title']
         item.content = data['content']
         db.session.commit()
-        publish_message_async({'op': 'update', 'id': data['id'], 'title': data['title'], 'content': data['content']})
+        publish_message_async(jsonify({'op': 'update', 'id': data['id'], 'title': data['title'], 'content': data['content']}))
         return jsonify({
             'message': 'Item updated successfully',
             'result': item.to_dict()
@@ -117,7 +117,7 @@ def delete(id):
         result = item.to_dict()
         db.session.delete(item)
         db.session.commit()
-        publish_message_async({'op': 'delete', 'id': id, 'title': None, 'content': None})
+        publish_message_async(jsonify({'op': 'delete', 'id': id, 'title': None, 'content': None}))
         return jsonify({
             'result': result,
             'message': 'Item deleted successfully'
