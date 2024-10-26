@@ -1,4 +1,5 @@
 """API routes for CRUD operations"""
+import os
 from uuid import uuid4
 import pika
 from flask import request, jsonify
@@ -13,20 +14,20 @@ executor = ThreadPoolExecutor(max_workers=2)
 def publish_message(data):
     """Function to publish messages to the RabbitMQ server"""
     try:
-        connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+        connection = pika.BlockingConnection(pika.URLParameters(os.getenv('RABBITMQ_URL')))
         channel = connection.channel()
-        channel.queue_declare(queue='crud_operations')
+        channel.queue_declare(queue='rag_content')
         message = {'data': data}
-        channel.basic_publish(exchange='', routing_key='crud_operations', body=str(message))
+        channel.basic_publish(exchange='', routing_key='rag_content', body=str(message))
     except pika.exceptions.AMQPError as e:
         app.logger.error(f"Error publishing message: {e}")
     finally:
         if connection and connection.is_open:
             connection.close()
 
-def publish_message_async(operation, data):
+def publish_message_async(data):
     """Function to publish messages asynchronously"""
-    executor.submit(publish_message, operation, data)
+    executor.submit(publish_message, data)
 
 # Routes
 @app.route('/create', methods=['POST'])
