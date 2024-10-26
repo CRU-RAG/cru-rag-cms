@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
@@ -6,6 +7,7 @@ db = SQLAlchemy()
 # Application Factory
 def create_app():
     app = Flask(__name__)
+    CORS(app)
     app.config.from_object('config.Config')
 
     db.init_app(app)
