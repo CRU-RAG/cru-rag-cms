@@ -18,7 +18,7 @@ def publish_message(data):
     """Function to publish messages to the RabbitMQ server"""
     try:
         credentials = pika.PlainCredentials(
-            os.environ.get("RABBIT_MQ_USERNAME"), os.environ.get("RABBIT_MQ_PASSWORD")
+        os.environ.get("RABBIT_MQ_USERNAME"), os.environ.get("RABBIT_MQ_PASSWORD")
         )
         parameters = pika.ConnectionParameters(
             os.environ.get("RABBIT_MQ_HOST"),
@@ -30,7 +30,7 @@ def publish_message(data):
         channel = connection.channel()
         channel.basic_qos(prefetch_count=5)
         channel.queue_declare(queue=os.environ.get("RABBIT_MQ_QUEUE"))
-        channel.basic_publish(exchange="", routing_key=os.environ.get("RABBIT_MQ_QUEUE"), body=jsonify({"data": data}))
+        channel.basic_publish(exchange="", routing_key=os.environ.get("RABBIT_MQ_QUEUE"), body=(json.dumps({"data": data})))
     except pika.exceptions.AMQPError as e:
         app.logger.error(f"Error publishing message: {e}")
     finally:
@@ -55,21 +55,7 @@ def create():
             "message": "Item created successfully",
             "result": new_item.to_dict()
         }
-        # publish_message_async({"op": "create", "id": id, "title": data["title"], "content": data["content"]})
-        credentials = pika.PlainCredentials(
-            os.environ.get("RABBIT_MQ_USERNAME"), os.environ.get("RABBIT_MQ_PASSWORD")
-        )
-        parameters = pika.ConnectionParameters(
-            os.environ.get("RABBIT_MQ_HOST"),
-            os.environ.get("RABBIT_MQ_PORT"),
-            os.environ.get("RABBIT_MQ_VHOST"),
-            credentials,
-        )
-        connection = pika.BlockingConnection(parameters)
-        channel = connection.channel()
-        channel.basic_qos(prefetch_count=5)
-        channel.queue_declare(queue=os.environ.get("RABBIT_MQ_QUEUE"))
-        channel.basic_publish(exchange="", routing_key=os.environ.get("RABBIT_MQ_QUEUE"), body=({"data": data}))
+        publish_message_async({"op": "create", "id": id, "title": data["title"], "content": data["content"]})
         return jsonify(response), 201
     except (KeyError, TypeError) as e:
         app.logger.error(f"Invalid input: {e}")
