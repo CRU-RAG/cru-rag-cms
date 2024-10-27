@@ -1,0 +1,19 @@
+
+
+.container {
+    display: flex;
+    margin: 1em 2em;
+}
+
+.pageItem {
+    margin-left: 4em;
+    padding: 10px;
+    height: 842px;
+    width: 595px; 
+
+    background-color: white;
+
+    font-family: Arial, Helvetica, sans-serif;
+    box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.5);
+
+}
