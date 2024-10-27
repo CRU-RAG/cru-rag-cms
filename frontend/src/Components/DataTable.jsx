@@ -8,6 +8,7 @@ const DataTable = () => {
     const [data, setData] = useState([]);
     const [noOfPages, setNoOfPages] = useState(0);
     const [isPopupOpen, setIsPopupOpen] = useState(false);
+    const [isConfermOpen, setIsConfirmOpen] = useState(false);
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
@@ -66,6 +67,8 @@ const DataTable = () => {
 
     const togglePopup = () => setIsPopupOpen(!isPopupOpen);
 
+    const toggleConfirm = () => setIsConfirmOpen(!isConfermOpen);
+
 
     const fetchPosts = async () => {
         try {
@@ -88,7 +91,8 @@ const DataTable = () => {
             setContent('');
 
             fetchPosts();
-            setIsPopupOpen(false); 
+            setIsPopupOpen(false);
+            toggleConfirm();
         } catch (error) {
             console.error("Error submitting item:", error);
         }
@@ -162,9 +166,28 @@ const DataTable = () => {
                         </button>
                     </div>
                 </Popup>
+
                 
                 
+                )}
+
+                    {isConfermOpen && (
+                    <Popup className="bg-gray-100 p-4 rounded-md shadow-md mt-4 w-[800px] h-[575px] flex flex-col items-center">
+                    <h2 className="text-3xl font-semibold mb-4" style={{ color: '#EF4E25' }}>Successful</h2>
                 
+                    <div className="flex justify-center items-center mb-6">
+                        <img src="src/Assets/Images/confirm.svg" alt="confirmation" className="w-60 h-60" />
+                    </div>
+                
+                    <div className="flex justify-center w-full">
+                        <button
+                            onClick={toggleConfirm}
+                            className="bg-[#EF4E25] text-white text-lg px-6 py-3 rounded-[10px] hover:bg-orange-600 transition"
+                        >
+                            OK
+                        </button>
+                    </div>
+                </Popup>
                 
                 
                 
