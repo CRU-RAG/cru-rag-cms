@@ -12,7 +12,6 @@ function App() {
       {/* Main Content (Header and DataTable) - 75% width */}
       <div className="flex flex-col w-3/4 h-screen overflow-y-scroll">
         <TopBar />
-        <Header />
         <DataTable />
       </div>
     </div>

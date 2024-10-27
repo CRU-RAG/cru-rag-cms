@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import axios from 'axios'; 
 import DataItem from "./DataItem";
 import Popup from './Popup';
+import Header from "./Header";
 const apiUrl = import.meta.env.VITE_API_URL;
 
 const DataTable = () => {
@@ -12,12 +13,16 @@ const DataTable = () => {
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
+    const [total, setTotal] = useState(0);
 
     const handleDelete = async (id) => {
         try {
             const response = await axios.get(`${apiUrl}/getall`);
             setData(response.data.items);
             setNoOfPages(response.data.pages);
+            const countResponse = await axios.get(`${apiUrl}/getall`);
+            setTotal(countResponse.data.total); // Assumes response.data.total contains the total feed data
+                
         } catch (error) {
             console.error("Error deleting item:", error);
         }
@@ -34,6 +39,16 @@ const DataTable = () => {
             }
         };
         fetchPosts();
+        const fetchTotal = async () => {
+            try {
+                const response = await axios.get(`${apiUrl}/getall`);
+                setTotal(response.data.total); // Assumes response.data.total contains the total feed data
+            } catch (error) {
+                console.error("Error fetching total:", error);
+            }
+        };
+
+        fetchTotal();
     }, []);
 
     const handelNext = async () => {
@@ -53,7 +68,7 @@ const DataTable = () => {
         const prevPage = currentPage - 1;
         if (prevPage >= 1) {
             try {
-                const response = await axios.get(`${apiUrl}/getall/getall?page=${prevPage}`);
+                const response = await axios.get(`${apiUrl}/getall?page=${prevPage}`);
                 setData(response.data.items);
                 setCurrentPage(prevPage);
             } catch (err) {
@@ -80,6 +95,15 @@ const DataTable = () => {
         }
     };
 
+    const fetchTotal = async () => {
+        try {
+            const response = await axios.get(`${apiUrl}/getall`);
+            setTotal(response.data.total); // Assumes response.data.total contains the total feed data
+        } catch (error) {
+            console.error("Error fetching total:", error);
+        }
+    };
+
     useEffect(() => {
         fetchPosts(); // Fetch posts on component mount
     }, []);
@@ -93,6 +117,7 @@ const DataTable = () => {
             fetchPosts();
             setIsPopupOpen(false);
             toggleConfirm();
+            fetchTotal();
         } catch (error) {
             console.error("Error submitting item:", error);
         }
@@ -112,6 +137,8 @@ const DataTable = () => {
     const pageIndexes = Array.from({ length: noOfPages }, (_, i) => i + 1);
 
     return (
+        <div>
+        <Header total={total} />
         <div className="flex flex-col items-center p-6">
             <div className="w-full max-w-4xl bg-white shadow-lg rounded-lg">
                 <div className="flex items-center justify-between p-4 border-b">
@@ -168,12 +195,12 @@ const DataTable = () => {
                 </Popup>
 
                 
-                
-                )}
+
+)}
 
                     {isConfermOpen && (
                     <Popup className="bg-gray-100 p-4 rounded-md shadow-md mt-4 w-[800px] h-[575px] flex flex-col items-center">
-                    <h2 className="text-3xl font-semibold mb-4" style={{ color: '#EF4E25' }}>Successful</h2>
+                    <h2 className="text-3xl font-bold mb-4" style={{ color: '#EF4E25' }}>Successful Added</h2>
                 
                     <div className="flex justify-center items-center mb-6">
                         <img src="src/Assets/Images/confirm.svg" alt="confirmation" className="w-60 h-60" />
@@ -210,24 +237,25 @@ const DataTable = () => {
                         onClick={handelPrev}
                         disabled={currentPage === 1}
                         className="flex items-center text-blue-500 hover:text-blue-700 transition disabled:opacity-50"
-                    >
+                        >
                         <img src="src/Assets/Images/arrowLeft.svg" alt="previous" className="w-4 h-4 mr-2" />
                         Previous
                     </button>
                     <div className="flex space-x-2">
+
                     {pageIndexes.map((item) => (
                     <span
                         key={item}
                         className={`px-3 py-1 rounded ${item === currentPage ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'} cursor-pointer`}
                         onClick={async () => {
                         setCurrentPage(item);
-                    try {
-                    const response = await axios.get(`${apiUrl}/getall?page=${item}`);
-                    setData(response.data.items);
-                } catch (err) {
-                    console.error(err);
-                }
-            }}
+                        try {
+                            const response = await axios.get(`${apiUrl}/getall?page=${item}`);
+                            setData(response.data.items);
+                        } catch (err) {
+                            console.error(err);
+                        }
+                    }}
         >
             {item}
         </span>
@@ -246,6 +274,7 @@ const DataTable = () => {
             </div>
             
         </div>
+    </div>
     );
 };
 

@@ -8,6 +8,7 @@ const DataItem = ({ id, title, Shortcontent, isLast, onDelete, onUpdate }) => {
     const [isPopupOpen, setIsPopupOpen] = useState(false);
     const [titleInput, setTitleInput] = useState('');
     const [contentInput, setContentInput] = useState('');
+    const [isConfermOpen, setIsConfirmOpen] = useState(false);
 
     const handleTitleChange = (event) => {
         setTitleInput(event.target.value);
@@ -41,6 +42,7 @@ const DataItem = ({ id, title, Shortcontent, isLast, onDelete, onUpdate }) => {
             });
             
             setIsPopupOpen(false);
+            toggleConfirm();
             onUpdate();  // Trigger a data fetch/update in DataTable to get the latest data
         } catch (error) {
             console.error("Error updating item:", error);
@@ -59,7 +61,7 @@ const DataItem = ({ id, title, Shortcontent, isLast, onDelete, onUpdate }) => {
         setIsPopupOpen(!isPopupOpen);
     };
     
-
+    const toggleConfirm = () => setIsConfirmOpen(!isConfermOpen);
     return (
         <div className={`flex items-center justify-between py-4 px-6 border-b ${isLast ? 'border-b-0' : ''}`}>
             <div className="flex-1 flex flex-col">
@@ -141,6 +143,28 @@ const DataItem = ({ id, title, Shortcontent, isLast, onDelete, onUpdate }) => {
                         </button>
                     </div>
                 </Popup>
+                
+                
+                )}
+
+                {isConfermOpen && (
+                <Popup className="bg-gray-100 p-4 rounded-md shadow-md mt-4 w-[800px] h-[575px] flex flex-col items-center">
+                    <h2 className="text-3xl font-bold mb-4 " style={{ color: '#EF4E25' }}>Successfully Edited</h2>
+                
+                    <div className="flex justify-center items-center mb-6">
+                        <img src="src/Assets/Images/confirm.svg" alt="confirmation" className="w-60 h-60" />
+                    </div>
+                
+                    <div className="flex justify-center w-full">
+                        <button
+                            onClick={toggleConfirm}
+                            className="bg-[#EF4E25] text-white text-lg px-6 py-3 rounded-[10px] hover:bg-orange-600 transition"
+                        >
+                            OK
+                        </button>
+                    </div>
+                </Popup>
+                
                 
                 
                 )}
