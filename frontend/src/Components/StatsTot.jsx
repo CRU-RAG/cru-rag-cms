@@ -1,20 +1,30 @@
-function StatsTot() {
+// StatsTot.js
+import { useState, useEffect } from "react";
+import axios from "axios";
+
+const apiUrl = import.meta.env.VITE_API_URL;
+
+const StatsTot = () => {
+    const [total, setTotal] = useState(0);
+
+    useEffect(() => {
+        const fetchTotal = async () => {
+            try {
+                const response = await axios.get(`${apiUrl}/getall`);
+                setTotal(response.data.total); // Assumes response.data.total contains the total feed data
+            } catch (error) {
+                console.error("Error fetching total:", error);
+            }
+        };
+
+        fetchTotal();
+    }, []); // Empty dependency array to run only on mount
+
     return (
-        <div className="flex flex-col items-start p-4 border rounded-lg shadow-lg bg-white"> {/* Changed items-center to items-start */}
-            <p className="text-[16px] font-semibold">Total Feed Data</p> {/* Remains unchanged */}
-            <span className="text-[36px] font-bold">2,420</span> {/* Remains unchanged */}
-            <span className="flex items-center space-x-2">
-                <img
-                    className="w-[20px] h-[20px] cursor-pointer hover:scale-110 transition-transform"
-                    src="src/Assets/Images/arrow-up.svg"
-                    alt="up"
-                />
-                <p className="whitespace-nowrap"><span className="text-[#027A48]">40% </span> vs last month</p> {/* Remains unchanged */}
-                <img
-                    className="w-[96px] h-[48px] cursor-pointer hover:scale-110 transition-transform" // Remains unchanged
-                    src="src/Assets/Images/lineGreen.svg"
-                    alt="line"
-                />
+        <div className="flex flex-col items-start p-4 border rounded-lg shadow-lg bg-white">
+            <p className="text-[16px] font-semibold">Total Feed Data</p>
+            <span className="text-[36px] font-bold">
+                <span className={`${total ? 'opacity-100' : 'opacity-0'}`}>{total}</span>
             </span>
         </div>
     );

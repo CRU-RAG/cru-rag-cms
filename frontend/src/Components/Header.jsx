@@ -8,7 +8,7 @@ function Header() {
             <Welcome />
             <div className="flex space-x-8">
                 <StatsTot />
-                <StatsAdmin />
+                
             </div>
         </div>
     );
