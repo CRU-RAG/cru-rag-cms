@@ -3,6 +3,7 @@ import axios from 'axios';
 import DataItem from "./DataItem";
 import Popup from './Popup';
 import Header from "./Header";
+
 const apiUrl = import.meta.env.VITE_API_URL;
 
 const DataTable = () => {
@@ -236,7 +237,7 @@ const DataTable = () => {
                     <button
                         onClick={handelPrev}
                         disabled={currentPage === 1}
-                        className="flex items-center text-blue-500 hover:text-blue-700 transition disabled:opacity-50"
+                        className="flex items-center  text-blue-500 hover:text-blue-700 transition disabled:opacity-50"
                         >
                         <img src="src/Assets/Images/arrowLeft.svg" alt="previous" className="w-4 h-4 mr-2" />
                         Previous
@@ -246,7 +247,7 @@ const DataTable = () => {
                     {pageIndexes.map((item) => (
                     <span
                         key={item}
-                        className={`px-3 py-1 rounded ${item === currentPage ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'} cursor-pointer`}
+                        className={`px-3 py-1 rounded ${item === currentPage ? 'bg-[#EF4E25] text-white' : 'bg-gray-200 text-gray-800'} cursor-pointer transition duration-300 ease-in-out`}
                         onClick={async () => {
                         setCurrentPage(item);
                         try {
@@ -268,7 +269,7 @@ const DataTable = () => {
                         className="flex items-center text-blue-500 hover:text-blue-700 transition disabled:opacity-50"
                     >
                         Next
-                        <img src="src/Assets/Images/arrowRight.svg" alt="next" className="w-4 h-4 ml-2" />
+                        <img src="src/Assets/Images/arrowRight.svg" alt="previous" className="w-4 h-4 ml-2" />
                     </button>
                 </div>
             </div>
