@@ -1,6 +1,6 @@
 import Welcome from './Welcome';
 import StatsTot from './StatsTot';
-import StatsAdmin from './StatsAdmin';
+
 
 function Header({total}) {
     return (
