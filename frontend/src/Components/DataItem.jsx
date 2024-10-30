@@ -71,13 +71,13 @@ const DataItem = ({ id, title, Shortcontent, isLast, onDelete, onUpdate }) => {
             <div className="flex items-center space-x-4">
                 <img
                     className="w-12 h-12 cursor-pointer hover:scale-110 transition-transform"
-                    src="src/Assets/Images/Trash.svg"
+                    src="src/assets/Images/Trash.svg"
                     alt="delete"
                     onClick={toggleDeletePopup}
                 />
                 <img
                     className="w-6 h-6 cursor-pointer hover:scale-110 transition-transform"
-                    src="src/Assets/Images/Edit.svg"
+                    src="src/assets/Images/Edit.svg"
                     alt="edit"
                     onClick={() => togglePopup(id)}
                 >
@@ -152,7 +152,7 @@ const DataItem = ({ id, title, Shortcontent, isLast, onDelete, onUpdate }) => {
                     <h2 className="text-3xl font-bold mb-4 " style={{ color: '#EF4E25' }}>Successfully Edited</h2>
                 
                     <div className="flex justify-center items-center mb-6">
-                        <img src="src/Assets/Images/confirm.svg" alt="confirmation" className="w-60 h-60" />
+                        <img src="src/assets/Images/confirm.svg" alt="confirmation" className="w-60 h-60" />
                     </div>
                 
                     <div className="flex justify-center w-full">

@@ -3,7 +3,7 @@ function Welcome() {
         <div className="flex items-center space-x-4 h-20"> {/* Set height for the outer div */}
             <img
                 className="h-full w-auto rounded-full cursor-pointer hover:scale-110 transition-transform" // Use h-full to make it the same height as the parent
-                src="src/Assets/Images/Avatar.svg"
+                src="src/assets/Images/Avatar.svg"
                 alt="avatar"
             />
             <div>

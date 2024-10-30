@@ -149,7 +149,7 @@ const DataTable = () => {
                         onClick={togglePopup}
                         className="flex items-center px-4 py-2 text-white text-[18px] rounded-[10px] bg-[#EF4E25]"
                     >
-                        <img src="src/Assets/Images/add.svg" alt="add" className="w-5 h-5 mr-2" />
+                        <img src="src/assets/Images/add.svg" alt="add" className="w-5 h-5 mr-2" />
                         New
                     </button>
                 </div>
@@ -204,7 +204,7 @@ const DataTable = () => {
                     <h2 className="text-3xl font-bold mb-4" style={{ color: '#EF4E25' }}>Successful Added</h2>
                 
                     <div className="flex justify-center items-center mb-6">
-                        <img src="src/Assets/Images/confirm.svg" alt="confirmation" className="w-60 h-60" />
+                        <img src="src/assets/Images/confirm.svg" alt="confirmation" className="w-60 h-60" />
                     </div>
                 
                     <div className="flex justify-center w-full">
@@ -239,7 +239,7 @@ const DataTable = () => {
                         disabled={currentPage === 1}
                         className="flex items-center  text-blue-500 hover:text-blue-700 transition disabled:opacity-50"
                         >
-                        <img src="src/Assets/Images/arrowLeft.svg" alt="previous" className="w-4 h-4 mr-2" />
+                        <img src="src/assets/Images/arrowLeft.svg" alt="previous" className="w-4 h-4 mr-2" />
                         Previous
                     </button>
                     <div className="flex space-x-2">
@@ -269,7 +269,7 @@ const DataTable = () => {
                         className="flex items-center text-blue-500 hover:text-blue-700 transition disabled:opacity-50"
                     >
                         Next
-                        <img src="src/Assets/Images/arrowRight.svg" alt="previous" className="w-4 h-4 ml-2" />
+                        <img src="src/assets/Images/arrowRight.svg" alt="previous" className="w-4 h-4 ml-2" />
                     </button>
                 </div>
             </div>
