@@ -1,4 +1,5 @@
 """API routes for CRUD operations"""
+from datetime import datetime
 import jwt
 import redis
 import json
@@ -14,7 +15,8 @@ from flask_limiter.util import get_remote_address
 from concurrent.futures import ThreadPoolExecutor
 from sqlalchemy.exc import SQLAlchemyError
 from . import db
-from .models import KnowledgeBase, User
+from .models.content import Content
+from .models.user import User
 
 executor = ThreadPoolExecutor(max_workers=2)
 load_dotenv(override=True)
@@ -88,7 +90,7 @@ def create():
     try:
         data = request.get_json()
         id = str(uuid4())
-        new_item = KnowledgeBase(id=id, title=data["title"], content=data["content"])
+        new_item = Content(id=id, title=data["title"], content=data["content"])
         db.session.add(new_item)
         db.session.commit()
         response = {
@@ -112,7 +114,7 @@ def getall():
     try:
         page = request.args.get("page", 1, type=int)
         per_page = 15
-        pagination = KnowledgeBase.query.paginate(page=page, per_page=per_page)
+        pagination = Content.query.filter(Content.deleted_at.is_(None)).paginate(page=page, per_page=per_page)
         items = pagination.items
         return jsonify({
             "items": [item.to_dict() for item in items],
@@ -129,7 +131,7 @@ def getall():
 def read_one(id):
     """Get a single item"""
     try:
-        item = KnowledgeBase.query.get(id)
+        item = Content.query.filter(Content.deleted_at.is_(None), Content.id == id).first()
         if item is None:
             return jsonify({"error": "Item not found"}), 404
         return jsonify(item.to_dict()), 200
@@ -143,11 +145,12 @@ def update():
     """Update an item"""
     try:
         data = request.get_json()
-        item = KnowledgeBase.query.get(data["id"])
+        item = Content.query.get(data["id"])
         if item is None:
             return jsonify({"error": "Item not found"}), 404
         item.title = data["title"]
         item.content = data["content"]
+        item.updated_at = datetime.now()
         db.session.commit()
         publish_message_async({"op": "update", "id": data["id"], "title": data["title"], "content": data["content"]})
         return jsonify({
@@ -165,13 +168,13 @@ def update():
 @app.route("/delete/<id>", methods=["DELETE"])
 @jwt_required()
 def delete(id):
-    """Delete an item"""
+    """Soft delete an item by setting the deleted_at timestamp"""
     try:
-        item = KnowledgeBase.query.get(id)
-        if item is None:
+        item = Content.query.get(id)
+        if item is None or item.deleted_at is not None:
             return jsonify({"error": "Item not found"}), 404
+        item.deleted_at = datetime.now()
         result = item.to_dict()
-        db.session.delete(item)
         db.session.commit()
         publish_message_async({"op": "delete", "id": id, "title": None, "content": None})
         return jsonify({
