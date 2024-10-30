@@ -125,6 +125,7 @@ def getall():
         return jsonify({"error": "Database error"}), 500
 
 @app.route("/get/<id>", methods=["GET"])
+@jwt_required()
 def read_one(id):
     """Get a single item"""
     try:
