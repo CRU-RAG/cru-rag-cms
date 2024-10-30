@@ -14,14 +14,14 @@ function DashBoard() {
                 <div className={`flex items-center mb-4 cursor-pointer ${currentTab === 'dashboard' ? 'font-semibold' : ''}`}
                     onClick={() => setCurrentTab('dashboard')}
                 >
-                    <img src="src/Assets/Images/barChart.svg" alt="bar" className="mr-2" />
+                    <img src="src/assets/Images/barChart.svg" alt="bar" className="mr-2" />
                     <span>Dashboard</span>
                 </div>
                 
                 <div className={`flex items-center mb-4 cursor-pointer ${currentTab === 'management' ? 'font-semibold' : ''}`}
                     onClick={() => setCurrentTab('management')}
                 >
-                    <img src="src/Assets/Images/users.svg" alt="users" className="mr-2" />
+                    <img src="src/assets/Images/users.svg" alt="users" className="mr-2" />
                     <span>Manage Users</span>
                 </div>
             </div>
