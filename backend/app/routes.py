@@ -1,15 +1,20 @@
 """API routes for CRUD operations"""
+import jwt
+import redis
 import json
 import os
 from uuid import uuid4
+from flask_jwt_extended import create_access_token, get_jwt, jwt_required, JWTManager, get_jwt_identity
+from flask_limiter import Limiter
 import pika
 from flask import request, jsonify
 from dotenv import load_dotenv
 from flask import current_app as app
+from flask_limiter.util import get_remote_address
 from concurrent.futures import ThreadPoolExecutor
 from sqlalchemy.exc import SQLAlchemyError
 from . import db
-from .models import KnowledgeBase
+from .models import KnowledgeBase, User
 
 executor = ThreadPoolExecutor(max_workers=2)
 load_dotenv(override=True)
@@ -41,8 +46,43 @@ def publish_message_async(data):
     """Function to publish messages asynchronously"""
     executor.submit(publish_message, data)
 
+limiter = Limiter(get_remote_address, app=app, default_limits=["200 per day", "50 per hour"])
+
+@app.route('/register', methods=['POST'])
+@limiter.limit(limit_value="5 per minute")  # Limit registration attempts
+def register():
+    """Register a new user"""
+    username = request.json.get('username')
+    password = request.json.get('password')
+
+    if User.query.filter_by(username=username).first():
+        return jsonify({"msg": "User already exists"}), 400
+
+    # Create new user and add to the database
+    new_user = User(username=username, password=password)
+    db.session.add(new_user)
+    db.session.commit()
+    return jsonify({"msg": "User registered successfully"}), 201
+
+# User login
+@app.route('/login', methods=['POST'])
+@limiter.limit(limit_value="10 per minute")  # Limit login attempts
+def login():
+    """Login an authenticated user"""
+    username = request.json.get('username')
+    password = request.json.get('password')
+
+    user = User.query.filter_by(username=username).first()
+    if user and user.check_password(password):
+        # Create access token
+        access_token = create_access_token(identity=username)
+        return jsonify({"access_token": access_token, "msg": "Logged In Successfully"}), 200
+    else:
+        return jsonify({"msg": "Invalid credentials"}), 401
+
 # Routes
 @app.route("/create", methods=["POST"])
+@jwt_required()
 def create():
     """Create a new item"""
     try:
@@ -66,6 +106,7 @@ def create():
         return jsonify({"error": "Database error"}), 500
 
 @app.route("/getall", methods=["GET"])
+@jwt_required()
 def getall():
     """Get all items"""
     try:
@@ -96,6 +137,7 @@ def read_one(id):
         return jsonify({"error": "Database error"}), 500
 
 @app.route("/update", methods=["PUT"])
+@jwt_required()
 def update():
     """Update an item"""
     try:
@@ -120,6 +162,7 @@ def update():
         return jsonify({"error": "Database error"}), 500
 
 @app.route("/delete/<id>", methods=["DELETE"])
+@jwt_required()
 def delete(id):
     """Delete an item"""
     try:
