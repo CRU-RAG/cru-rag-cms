@@ -1,3 +1,4 @@
+"""Entry point for the application."""
 from flask import Flask
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
@@ -7,15 +8,16 @@ from flask_limiter import Limiter
 from flask_restful import Api
 from .resources.content_resources import ContentListResource, ContentResource
 from .resources.auth_resources import UserRegisterResource, UserLoginResource
-from .services.limiter import limiter
-from .extensions import db
+from .services.limiter import LIMITER as limiter
+from .extensions import DB as db
 
 # Application Factory
 def create_app():
+    """Create a Flask application."""
     app = Flask(__name__)
     CORS(app)
-    jwt = JWTManager(app)
-    bcrypt = Bcrypt(app)
+    JWTManager(app)
+    Bcrypt(app)
     api = Api(app)
     api.add_resource(ContentListResource, '/contents')
     api.add_resource(ContentResource, '/contents/<string:id>')
