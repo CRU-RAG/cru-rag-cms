@@ -1,7 +1,7 @@
 """User model"""
-from flask_bcrypt import bcrypt
 from datetime import datetime
-from app import db
+from ..extensions import db
+from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 
 class User(db.Model):
     """Users model"""
@@ -14,11 +14,13 @@ class User(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.now(), nullable=False)
     deleted_at = db.Column(db.DateTime, nullable=True)
 
-    def __init__(self, username, password):
+    def __init__(self, username, password_hash):
         """Initialize user"""
         self.username = username
-        self.password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        self.password_hash = password_hash
 
-    def check_password(self, password):
-        """Check user password"""
-        return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
+class UserSchema(SQLAlchemyAutoSchema):
+    class Meta:
+        model = User
+        load_instance = True
+        exclude = ("password_hash",)

@@ -1,6 +1,9 @@
 """Content Model"""
 from datetime import datetime
-from app import db
+from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
+from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
+from marshmallow import fields
+from ..extensions import db
 
 class Content(db.Model):
     """Content Model"""
@@ -27,3 +30,10 @@ class Content(db.Model):
     def __repr__(self):
         """Method to return a string representation of the model"""
         return f"Item('{self.name}', '{self.description}'), '{self.created_at}', '{self.updated_at}', '{self.deleted_at}'"
+
+class ContentSchema(SQLAlchemyAutoSchema):
+    """Content Schema"""
+    class Meta:
+        """Meta class for Content Schema"""
+        model = Content
+        load_instance = True
