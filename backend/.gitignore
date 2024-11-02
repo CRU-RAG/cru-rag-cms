@@ -2,3 +2,4 @@
 env
 instance
 __pycache__
+insert_entry.sql

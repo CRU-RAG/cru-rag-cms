@@ -5,15 +5,15 @@ from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from ..extensions import DB as db
 
 class UserRole(Enum):
-    ADMIN = "Admin"
-    EDITOR = "Editor"
-    REGULAR = "Regular"
+    ADMIN = "ADMIN"
+    EDITOR = "EDITOR"
+    REGULAR = "REGULAR"
 
 class User(db.Model):
     """Users model"""
     __tablename__ = 'users'
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.String(100), primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     first_name = db.Column(db.String(80), nullable=False)
     middle_name = db.Column(db.String(80), nullable=True)

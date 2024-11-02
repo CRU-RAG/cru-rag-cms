@@ -8,6 +8,7 @@ from flask_limiter import Limiter
 from flask_restful import Api
 from .resources.content_resources import ContentListResource, ContentResource
 from .resources.auth_resources import UserRegisterResource, UserLoginResource
+from .resources.user_resources import UserListResource, UserResource
 from .services.limiter import LIMITER as limiter
 from .extensions import DB as db
 
@@ -21,6 +22,8 @@ def create_app():
     api = Api(app)
     api.add_resource(ContentListResource, '/contents')
     api.add_resource(ContentResource, '/contents/<string:id>')
+    api.add_resource(UserListResource, '/users')
+    api.add_resource(UserResource, '/users/<string:user_id>')
     api.add_resource(UserRegisterResource, '/register')
     api.add_resource(UserLoginResource, '/login')
     app.config.from_object('config.Config')

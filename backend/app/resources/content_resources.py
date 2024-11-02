@@ -4,7 +4,8 @@ import json
 from uuid import uuid4
 from flask_restful import Resource
 from flask import request
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from ..models.user import User, UserRole
 from ..models.content import Content, db
 from ..models.content import ContentSchema
 from ..services.producer import Producer
@@ -35,6 +36,10 @@ class ContentListResource(Resource):
     @jwt_required()
     def post(self):
         """Method to create a new content."""
+        current_user_id = get_jwt_identity()
+        current_user = User.query.get(current_user_id)
+        if current_user.role not in [UserRole.ADMIN, UserRole.EDITOR]:
+            return {'message': 'You do not have permission to create content'}, 403
         data = request.get_json()
         data['id'] = str(uuid4())
         content = CONTENT_SCHEMA.load(data, session=db.session)
@@ -65,7 +70,13 @@ class ContentResource(Resource):
     @jwt_required()
     def put(self, id):
         """Method to update a single content."""
-        content = Content.query.get_or_404(id)
+        current_user_id = get_jwt_identity()
+        current_user = User.query.get(current_user_id)
+        if current_user.role not in [UserRole.ADMIN, UserRole.EDITOR]:
+            return {'message': 'You do not have permission to update content'}, 403
+        content = Content.query.filter(Content.deleted_at.is_(None), Content.id == id).first()
+        if not content:
+            return {'message': 'Content not found'}, 404
         data = request.get_json()
         content.updated_at = datetime.now()
         content = CONTENT_SCHEMA.load(data, instance=content, partial=True, session=db.session)
@@ -85,10 +96,14 @@ class ContentResource(Resource):
     @jwt_required()
     def delete(self, id):
         """Method to delete a single content."""
-        content = Content.query.get_or_404(id)
-        data = request.get_json()
+        current_user_id = get_jwt_identity()
+        current_user = User.query.get(current_user_id)
+        if current_user.role not in [UserRole.ADMIN, UserRole.EDITOR]:
+            return {'message': 'You do not have permission to delete content'}, 403
+        content = Content.query.filter(Content.deleted_at.is_(None), Content.id == id).first()
+        if not content:
+            return {'message': 'Content not found'}, 404
         content.deleted_at = datetime.now()
-        content = CONTENT_SCHEMA.load(data, instance=content, partial=True, session=db.session)
         db.session.commit()
 
         # Publish message to RabbitMQ
@@ -100,4 +115,4 @@ class ContentResource(Resource):
         }
         PRODUCER.publish_message(json.dumps(message))
 
-        return CONTENT_SCHEMA.dump(content), 204
+        return {'message': 'Content deleted successfully'}, 200
