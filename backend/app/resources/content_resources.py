@@ -4,12 +4,13 @@ import json
 from uuid import uuid4
 from flask_restful import Resource
 from flask import request
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required
 from ..models.user import User, UserRole
 from ..models.content import Content, ContentSchema
 from ..extensions import DB as db
 from ..services.producer import Producer
 from ..utils.api_response import SuccessResponse, ErrorResponse
+from ..utils.decorators import roles_required
 
 CONTENT_SCHEMA = ContentSchema()
 CONTENTS_SCHEMA = ContentSchema(many=True)
@@ -35,13 +36,9 @@ class ContentListResource(Resource):
         }, 200
 
     @jwt_required()
+    @roles_required(UserRole.admin, UserRole.editor)
     def post(self):
         """Method to create a new content."""
-        current_user_id = get_jwt_identity()
-        current_user = User.query.get(current_user_id)
-        if current_user.role not in [UserRole.admin, UserRole.editor]:
-            response = ErrorResponse(message='You do not have permission to create content')
-            return response.to_dict(), 403
         data = request.get_json()
         data['id'] = str(uuid4())
         content = CONTENT_SCHEMA.load(data, session=db.session)
@@ -72,13 +69,9 @@ class ContentResource(Resource):
         return response.to_dict(), 404
 
     @jwt_required()
+    @roles_required(UserRole.admin, UserRole.editor)
     def put(self, id):
         """Method to update a single content."""
-        current_user_id = get_jwt_identity()
-        current_user = User.query.get(current_user_id)
-        if current_user.role not in [UserRole.admin, UserRole.editor]:
-            response = ErrorResponse(message='You do not have permission to update content')
-            return response.to_dict(), 403
         content = Content.query.filter(Content.deleted_at.is_(None), Content.id == id).first()
         if not content:
             response = ErrorResponse(message='Content not found')
@@ -100,13 +93,9 @@ class ContentResource(Resource):
         return response.to_dict(), 200
 
     @jwt_required()
+    @roles_required(UserRole.admin, UserRole.editor)
     def delete(self, id):
         """Method to delete a single content."""
-        current_user_id = get_jwt_identity()
-        current_user = User.query.get(current_user_id)
-        if current_user.role not in [UserRole.admin, UserRole.editor]:
-            response = ErrorResponse(message='You do not have permission to delete content')
-            return response.to_dict(), 403
         content = Content.query.filter(Content.deleted_at.is_(None), Content.id == id).first()
         if not content:
             response = ErrorResponse(message='Content not found')
