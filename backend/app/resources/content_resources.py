@@ -38,7 +38,7 @@ class ContentListResource(Resource):
         """Method to create a new content."""
         current_user_id = get_jwt_identity()
         current_user = User.query.get(current_user_id)
-        if current_user.role not in [UserRole.ADMIN, UserRole.EDITOR]:
+        if current_user.role not in [UserRole.admin, UserRole.editor]:
             return {'message': 'You do not have permission to create content'}, 403
         data = request.get_json()
         data['id'] = str(uuid4())
@@ -72,7 +72,7 @@ class ContentResource(Resource):
         """Method to update a single content."""
         current_user_id = get_jwt_identity()
         current_user = User.query.get(current_user_id)
-        if current_user.role not in [UserRole.ADMIN, UserRole.EDITOR]:
+        if current_user.role not in [UserRole.admin, UserRole.editor]:
             return {'message': 'You do not have permission to update content'}, 403
         content = Content.query.filter(Content.deleted_at.is_(None), Content.id == id).first()
         if not content:
@@ -98,7 +98,7 @@ class ContentResource(Resource):
         """Method to delete a single content."""
         current_user_id = get_jwt_identity()
         current_user = User.query.get(current_user_id)
-        if current_user.role not in [UserRole.ADMIN, UserRole.EDITOR]:
+        if current_user.role not in [UserRole.admin, UserRole.editor]:
             return {'message': 'You do not have permission to delete content'}, 403
         content = Content.query.filter(Content.deleted_at.is_(None), Content.id == id).first()
         if not content:

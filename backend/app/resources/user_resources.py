@@ -19,7 +19,7 @@ class UserListResource(Resource):
         """Get a list of all users (admin only)."""
         current_user_id = get_jwt_identity()
         current_user = User.query.get(current_user_id)
-        if current_user.role != UserRole.ADMIN:
+        if current_user.role != UserRole.admin:
             return {'message': 'You do not have permission to view users.'}, 403
         users = User.query.filter(User.deleted_at.is_(None)).all()
         return {'users': USERS_SCHEMA.dump(users)}, 200
@@ -29,7 +29,7 @@ class UserListResource(Resource):
         """Create a new user (admin only)."""
         current_user_id = get_jwt_identity()
         current_user = User.query.get(current_user_id)
-        if current_user.role != UserRole.ADMIN:
+        if current_user.role != UserRole.admin:
             return {'message': 'You do not have permission to create users.'}, 403
         data = request.get_json()
         password_bytes = data['password'].encode('utf-8')
@@ -45,7 +45,7 @@ class UserListResource(Resource):
             password_hash=hashed_password_str,
         )
         new_user.id = str(uuid4())
-        new_user.role = data.get('role', UserRole.REGULAR)
+        new_user.role = data.get('role', UserRole.regular)
         db.session.add(new_user)
         db.session.commit()
         return USER_SCHEMA.dump(new_user), 201
@@ -58,7 +58,7 @@ class UserResource(Resource):
         """Get a user by ID (admin and the user only)."""
         current_user_id = get_jwt_identity()
         current_user = User.query.get(current_user_id)
-        if current_user.role != UserRole.ADMIN and current_user_id != user_id:
+        if current_user.role != UserRole.admin and current_user_id != user_id:
             return {'message': 'You do not have permission to view user.'}, 403
         user = User.query.filter(User.deleted_at.is_(None), User.id == user_id).first()
         if not user:
@@ -70,12 +70,12 @@ class UserResource(Resource):
         """Delete a user by ID (admin only)."""
         current_user_id = get_jwt_identity()
         current_user = User.query.get(current_user_id)
-        if current_user.role != UserRole.ADMIN and current_user_id != user_id:
+        if current_user.role != UserRole.admin and current_user_id != user_id:
             return {'message': 'You do not have permission to delete users.'}, 403
         user_to_delete = User.query.filter(User.deleted_at.is_(None), User.id == user_id).first()
         if not user_to_delete:
             return {'message': 'User not found'}, 404
-        if user_to_delete.role == UserRole.ADMIN:
+        if user_to_delete.role == UserRole.admin:
             return {'message': 'You cannot delete an admin user.'}, 400
         user_to_delete.deleted_at = datetime.now()
         db.session.commit()
@@ -86,12 +86,12 @@ class UserResource(Resource):
         """Promote a user to admin (admin only)."""
         current_user_id = get_jwt_identity()
         current_user = User.query.get(current_user_id)
-        if current_user.role != UserRole.ADMIN:
+        if current_user.role != UserRole.admin:
             return {'message': 'You do not have permission to modify users.'}, 403
         user_to_modify = User.query.filter(User.deleted_at.is_(None), User.id == user_id).first()
         if not user_to_modify:
             return {'message': 'User not found'}, 404
-        if user_to_modify.role == UserRole.ADMIN:
+        if user_to_modify.role == UserRole.admin:
             return {'message': 'User is already an admin.'}, 400
         data = request.get_json()
         if 'role' in data and data['role'] in [role.value for role in UserRole]:

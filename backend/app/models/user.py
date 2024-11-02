@@ -5,9 +5,9 @@ from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from ..extensions import DB as db
 
 class UserRole(Enum):
-    ADMIN = "ADMIN"
-    EDITOR = "EDITOR"
-    REGULAR = "REGULAR"
+    admin = "admin"
+    editor = "editor"
+    regular = "regular"
 
 class User(db.Model):
     """Users model"""
@@ -28,7 +28,7 @@ class User(db.Model):
     role = db.Column(
         db.Enum(UserRole, name='user_role', native_enum=False), 
         nullable=False, 
-        default=UserRole.REGULAR
+        default=UserRole.regular
     )
 
     def __init__(self, username, password_hash, first_name, middle_name, last_name, email, phone_number):
