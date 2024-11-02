@@ -6,9 +6,10 @@ from flask_restful import Resource
 from flask import request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from ..models.user import User, UserRole
-from ..models.content import Content, db
-from ..models.content import ContentSchema
+from ..models.content import Content, ContentSchema
+from ..extensions import DB as db
 from ..services.producer import Producer
+from ..utils.api_response import SuccessResponse, ErrorResponse
 
 CONTENT_SCHEMA = ContentSchema()
 CONTENTS_SCHEMA = ContentSchema(many=True)
@@ -39,7 +40,8 @@ class ContentListResource(Resource):
         current_user_id = get_jwt_identity()
         current_user = User.query.get(current_user_id)
         if current_user.role not in [UserRole.admin, UserRole.editor]:
-            return {'message': 'You do not have permission to create content'}, 403
+            response = ErrorResponse(message='You do not have permission to create content')
+            return response.to_dict(), 403
         data = request.get_json()
         data['id'] = str(uuid4())
         content = CONTENT_SCHEMA.load(data, session=db.session)
@@ -54,8 +56,8 @@ class ContentListResource(Resource):
             "content": content.content
         }
         PRODUCER.publish_message(json.dumps(message))
-
-        return CONTENT_SCHEMA.dump(content), 201
+        response = SuccessResponse(data=CONTENT_SCHEMA.dump(content))
+        return response.to_dict(), 201
 
 class ContentResource(Resource):
     """Resource to handle a single content."""
@@ -64,8 +66,10 @@ class ContentResource(Resource):
         """Method to get a single content."""
         content = Content.query.filter(Content.deleted_at.is_(None), Content.id == id).first()
         if content:
-            return CONTENT_SCHEMA.dump(content), 200
-        return {'message': 'Content not found'}, 404
+            response = SuccessResponse(data=CONTENT_SCHEMA.dump(content))
+            return response.to_dict(), 200
+        response = ErrorResponse(message='Content not found')
+        return response.to_dict(), 404
 
     @jwt_required()
     def put(self, id):
@@ -73,10 +77,12 @@ class ContentResource(Resource):
         current_user_id = get_jwt_identity()
         current_user = User.query.get(current_user_id)
         if current_user.role not in [UserRole.admin, UserRole.editor]:
-            return {'message': 'You do not have permission to update content'}, 403
+            response = ErrorResponse(message='You do not have permission to update content')
+            return response.to_dict(), 403
         content = Content.query.filter(Content.deleted_at.is_(None), Content.id == id).first()
         if not content:
-            return {'message': 'Content not found'}, 404
+            response = ErrorResponse(message='Content not found')
+            return response.to_dict(), 404
         data = request.get_json()
         content.updated_at = datetime.now()
         content = CONTENT_SCHEMA.load(data, instance=content, partial=True, session=db.session)
@@ -90,8 +96,8 @@ class ContentResource(Resource):
             "content": content.content
         }
         PRODUCER.publish_message(json.dumps(message))
-
-        return CONTENT_SCHEMA.dump(content), 200
+        response = SuccessResponse(data=CONTENT_SCHEMA.dump(content))
+        return response.to_dict(), 200
 
     @jwt_required()
     def delete(self, id):
@@ -99,10 +105,12 @@ class ContentResource(Resource):
         current_user_id = get_jwt_identity()
         current_user = User.query.get(current_user_id)
         if current_user.role not in [UserRole.admin, UserRole.editor]:
-            return {'message': 'You do not have permission to delete content'}, 403
+            response = ErrorResponse(message='You do not have permission to delete content')
+            return response.to_dict(), 403
         content = Content.query.filter(Content.deleted_at.is_(None), Content.id == id).first()
         if not content:
-            return {'message': 'Content not found'}, 404
+            response = ErrorResponse(message='Content not found')
+            return response.to_dict(), 404
         content.deleted_at = datetime.now()
         db.session.commit()
 
@@ -114,5 +122,5 @@ class ContentResource(Resource):
             "content": None
         }
         PRODUCER.publish_message(json.dumps(message))
-
-        return {'message': 'Content deleted successfully'}, 200
+        response = SuccessResponse(message='Content deleted successfully')
+        return response.to_dict(), 200

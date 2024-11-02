@@ -5,9 +5,11 @@ from flask_restful import Resource
 from flask import request
 from flask_jwt_extended import create_access_token
 from bcrypt import hashpw, gensalt, checkpw
-from ..models.user import User, db
+from ..models.user import User
+from ..extensions import DB as db
 from ..models.user import UserSchema
 from ..services.limiter import LIMITER as limiter
+from ..utils.api_response import SuccessResponse, ErrorResponse
 
 USER_SCHEMA = UserSchema()
 
@@ -18,7 +20,8 @@ class UserRegisterResource(Resource):
         """Method to register a new user"""
         data = request.get_json()
         if User.query.filter_by(username=data['username']).first():
-            return {'message': 'User already exists'}, 400
+            response = ErrorResponse(message='User already exists')
+            return response.to_dict(), 400
         id = str(uuid4())
         password_bytes = data['password'].encode('utf-8')
         hashed_password = hashpw(password_bytes, gensalt())
@@ -35,7 +38,8 @@ class UserRegisterResource(Resource):
         new_user.id = id
         db.session.add(new_user)
         db.session.commit()
-        return USER_SCHEMA.dump(new_user), 201
+        response = SuccessResponse(data=USER_SCHEMA.dump(new_user))
+        return response.to_dict(), 201
 
 class UserLoginResource(Resource):
     """Resource to login a user"""
@@ -49,5 +53,10 @@ class UserLoginResource(Resource):
             stored_hash = base64.b64decode(user.password_hash.encode('utf-8'))
             if checkpw(password_bytes, stored_hash):
                 access_token = create_access_token(identity=user.id)
-                return {'access_token': access_token, 'message': 'Logged In Successfully'}, 200
-        return {'message': 'Invalid credentials'}, 401
+                response = SuccessResponse(
+                    data={'access_token': access_token}, 
+                    message='Logged In Successfully'
+                )
+                return response.to_dict(), 200
+        response = ErrorResponse(message='Invalid credentials')
+        return response.to_dict(), 401

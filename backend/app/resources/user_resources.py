@@ -6,7 +6,9 @@ from bcrypt import gensalt, hashpw
 from flask_restful import Resource
 from flask import request
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from ..models.user import User, UserRole, UserSchema, db
+from ..models.user import User, UserRole, UserSchema
+from ..extensions import DB as db
+from ..utils.api_response import SuccessResponse, ErrorResponse
 
 USER_SCHEMA = UserSchema()
 USERS_SCHEMA = UserSchema(many=True)
@@ -20,9 +22,11 @@ class UserListResource(Resource):
         current_user_id = get_jwt_identity()
         current_user = User.query.get(current_user_id)
         if current_user.role != UserRole.admin:
-            return {'message': 'You do not have permission to view users.'}, 403
+            response = ErrorResponse(message='You do not have permission to view users')
+            return response.to_dict(), 403
         users = User.query.filter(User.deleted_at.is_(None)).all()
-        return {'users': USERS_SCHEMA.dump(users)}, 200
+        response = SuccessResponse(data=USERS_SCHEMA.dump(users))
+        return response.to_dict(), 200
     
     @jwt_required()
     def post(self):
@@ -30,7 +34,8 @@ class UserListResource(Resource):
         current_user_id = get_jwt_identity()
         current_user = User.query.get(current_user_id)
         if current_user.role != UserRole.admin:
-            return {'message': 'You do not have permission to create users.'}, 403
+            response = ErrorResponse(message='You do not have permission to create users')
+            return response.to_dict(), 403
         data = request.get_json()
         password_bytes = data['password'].encode('utf-8')
         hashed_password = hashpw(password_bytes, gensalt())
@@ -48,7 +53,8 @@ class UserListResource(Resource):
         new_user.role = data.get('role', UserRole.regular)
         db.session.add(new_user)
         db.session.commit()
-        return USER_SCHEMA.dump(new_user), 201
+        response = SuccessResponse(data=USER_SCHEMA.dump(new_user))
+        return response.to_dict(), 201
 
 class UserResource(Resource):
     """Resource to handle user operations (admin only)."""
@@ -59,11 +65,14 @@ class UserResource(Resource):
         current_user_id = get_jwt_identity()
         current_user = User.query.get(current_user_id)
         if current_user.role != UserRole.admin and current_user_id != user_id:
-            return {'message': 'You do not have permission to view user.'}, 403
+            response = ErrorResponse(message='You do not have permission to view users')
+            return response.to_dict(), 403
         user = User.query.filter(User.deleted_at.is_(None), User.id == user_id).first()
         if not user:
-            return {'message': 'User not found'}, 404
-        return USER_SCHEMA.dump(user), 200
+            response = ErrorResponse(message='User not found')
+            return response.to_dict(), 404
+        response = SuccessResponse(data=USER_SCHEMA.dump(user))
+        return response.to_dict(), 200
 
     @jwt_required()
     def delete(self, user_id):
@@ -71,15 +80,19 @@ class UserResource(Resource):
         current_user_id = get_jwt_identity()
         current_user = User.query.get(current_user_id)
         if current_user.role != UserRole.admin and current_user_id != user_id:
-            return {'message': 'You do not have permission to delete users.'}, 403
+            response = ErrorResponse(message='You do not have permission to delete users')
+            return response.to_dict(), 403
         user_to_delete = User.query.filter(User.deleted_at.is_(None), User.id == user_id).first()
         if not user_to_delete:
-            return {'message': 'User not found'}, 404
+            response = ErrorResponse(message='User not found')
+            return response.to_dict(), 404
         if user_to_delete.role == UserRole.admin:
-            return {'message': 'You cannot delete an admin user.'}, 400
+            response = ErrorResponse(message='You cannot delete an admin user')
+            return response.to_dict(), 400
         user_to_delete.deleted_at = datetime.now()
         db.session.commit()
-        return {'message': 'User deleted successfully.'}, 200
+        response = SuccessResponse(message='User deleted successfully')
+        return response.to_dict(), 200
 
     @jwt_required()
     def put(self, user_id):
@@ -87,18 +100,22 @@ class UserResource(Resource):
         current_user_id = get_jwt_identity()
         current_user = User.query.get(current_user_id)
         if current_user.role != UserRole.admin:
-            return {'message': 'You do not have permission to modify users.'}, 403
+            response = ErrorResponse(message='You do not have permission to modify users')
+            return response.to_dict(), 403
         user_to_modify = User.query.filter(User.deleted_at.is_(None), User.id == user_id).first()
         if not user_to_modify:
-            return {'message': 'User not found'}, 404
+            response = ErrorResponse(message='User not found')
+            return response.to_dict(), 404
         if user_to_modify.role == UserRole.admin:
-            return {'message': 'User is already an admin.'}, 400
+            response = ErrorResponse(message='User is already an admin')
+            return response.to_dict(), 400
         data = request.get_json()
         if 'role' in data and data['role'] in [role.value for role in UserRole]:
-            print(data)
             user_to_modify.updated_at = datetime.now()
             user_to_modify.role = data['role']
             db.session.commit()
-            return {'message': f"User role updated to {data['role']}."}, 200
+            response = SuccessResponse(data=USER_SCHEMA.dump(user_to_modify), message='User role updated successfully')
+            return response.to_dict(), 200
         else:
-            return {'message': 'Invalid role specified.'}, 400
+            response = ErrorResponse(message='Invalid role specified')
+            return response.to_dict(), 400
