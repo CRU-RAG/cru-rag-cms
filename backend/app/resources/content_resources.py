@@ -5,7 +5,7 @@ from uuid import uuid4
 from flask_restful import Resource
 from flask import request
 from flask_jwt_extended import jwt_required
-from ..models.user import User, UserRole
+from ..models.user import AdminUser, EditorUser, User
 from ..models.content import Content, ContentSchema
 from ..extensions import DB as db
 from ..services.producer import Producer
@@ -36,7 +36,7 @@ class ContentListResource(Resource):
         }, 200
 
     @jwt_required()
-    @roles_required(UserRole.admin, UserRole.editor)
+    @roles_required("admin", "editor")
     def post(self):
         """Method to create a new content."""
         data = request.get_json()
@@ -69,7 +69,7 @@ class ContentResource(Resource):
         return response.to_dict(), 404
 
     @jwt_required()
-    @roles_required(UserRole.admin, UserRole.editor)
+    @roles_required("admin", "editor")
     def put(self, id):
         """Method to update a single content."""
         content = Content.query.filter(Content.deleted_at.is_(None), Content.id == id).first()
@@ -93,7 +93,7 @@ class ContentResource(Resource):
         return response.to_dict(), 200
 
     @jwt_required()
-    @roles_required(UserRole.admin, UserRole.editor)
+    @roles_required("admin", "editor")
     def delete(self, id):
         """Method to delete a single content."""
         content = Content.query.filter(Content.deleted_at.is_(None), Content.id == id).first()

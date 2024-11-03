@@ -5,7 +5,7 @@ from flask_restful import Resource
 from flask import request
 from flask_jwt_extended import create_access_token
 from bcrypt import hashpw, gensalt, checkpw
-from ..models.user import User
+from ..models.user import RegularUser, RegularUserSchema, User
 from ..extensions import DB as db
 from ..models.user import UserSchema
 from ..services.limiter import LIMITER as limiter
@@ -26,7 +26,7 @@ class UserRegisterResource(Resource):
         password_bytes = data['password'].encode('utf-8')
         hashed_password = hashpw(password_bytes, gensalt())
         hashed_password_str = base64.b64encode(hashed_password).decode('utf-8')
-        new_user = User(
+        new_user = RegularUser(
             username=data['username'],
             first_name=data['first_name'],
             middle_name=data.get('middle_name', ''),
@@ -38,7 +38,8 @@ class UserRegisterResource(Resource):
         new_user.id = id
         db.session.add(new_user)
         db.session.commit()
-        response = SuccessResponse(data=USER_SCHEMA.dump(new_user))
+        user_schema = RegularUserSchema()
+        response = SuccessResponse(data=user_schema.dump(new_user))
         return response.to_dict(), 201
 
 class UserLoginResource(Resource):
