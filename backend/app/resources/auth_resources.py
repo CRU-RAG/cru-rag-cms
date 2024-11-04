@@ -9,7 +9,7 @@ from ..models.user import RegularUser, RegularUserSchema, User
 from ..extensions import DB as db
 from ..models.user import UserSchema
 from ..services.limiter import LIMITER as limiter
-from ..utils.api_response import Response
+from .api_response import Response
 
 USER_SCHEMA = UserSchema()
 

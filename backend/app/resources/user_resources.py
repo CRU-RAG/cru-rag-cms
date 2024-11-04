@@ -8,7 +8,7 @@ from flask import request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from ..models.user import AdminUser, EditorUser, RegularUser, User, UserSchema, RegularUserSchema, EditorUserSchema, AdminUserSchema
 from ..extensions import DB as db
-from ..utils.api_response import Response
+from .api_response import Response
 from ..utils.decorators import roles_required
 
 USER_SCHEMA = UserSchema()

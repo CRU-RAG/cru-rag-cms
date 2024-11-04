@@ -9,7 +9,7 @@ from ..models.user import AdminUser, EditorUser, User
 from ..models.content import Content, ContentSchema
 from ..extensions import DB as db
 from ..services.producer import Producer
-from ..utils.api_response import Response
+from .api_response import Response
 from ..utils.decorators import roles_required
 
 CONTENT_SCHEMA = ContentSchema()

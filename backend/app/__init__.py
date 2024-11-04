@@ -11,7 +11,7 @@ from .resources.auth_resources import UserRegisterResource, UserLoginResource
 from .resources.user_resources import UserListResource, UserResource
 from .services.limiter import LIMITER as limiter
 from .extensions import DB as db
-from .utils.api_response import Response
+from .resources.api_response import Response
 
 # Application Factory
 def create_app():
