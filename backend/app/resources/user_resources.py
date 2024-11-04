@@ -8,7 +8,7 @@ from flask import request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from ..models.user import AdminUser, EditorUser, RegularUser, User, UserSchema, RegularUserSchema, EditorUserSchema, AdminUserSchema
 from ..extensions import DB as db
-from ..utils.api_response import SuccessResponse, ErrorResponse
+from ..utils.api_response import Response
 from ..utils.decorators import roles_required
 
 USER_SCHEMA = UserSchema()
@@ -34,7 +34,10 @@ class UserListResource(Resource):
     def get(self):
         """Get a list of all users (admin only)."""
         users = User.query.filter(User.deleted_at.is_(None)).all()
-        response = SuccessResponse(data=USERS_SCHEMA.dump(users))
+        response = Response(
+            data=USERS_SCHEMA.dump(users),
+            message='Users retrieved successfully'
+        )
         return response.to_dict(), 200
     
     @jwt_required()
@@ -43,7 +46,11 @@ class UserListResource(Resource):
         """Create a new user (admin only)."""
         data = request.get_json()
         if User.query.filter_by(username=data['username']).first():
-            response = ErrorResponse(message='User already exists')
+            response = Response(
+                message='Unable to create user',
+                error='User already exists',
+                status=400
+            )
             return response.to_dict(), 400
         password_bytes = data['password'].encode('utf-8')
         hashed_password = hashpw(password_bytes, gensalt())
@@ -63,7 +70,11 @@ class UserListResource(Resource):
         db.session.add(new_user)
         db.session.commit()
         user_schema = USER_SCHEMAS.get(role, RegularUserSchema())
-        response = SuccessResponse(data=user_schema.dump(new_user))
+        response = Response(
+            data=user_schema.dump(new_user),
+            message='User created successfully',
+            status=201
+        )
         return response.to_dict(), 201
 
 class UserResource(Resource):
@@ -75,9 +86,16 @@ class UserResource(Resource):
         """Get a user by ID (admin and the user only)."""
         user = User.query.filter(User.deleted_at.is_(None), User.id == user_id).first()
         if not user:
-            response = ErrorResponse(message='User not found')
+            response = Response(
+                message='Unable to retrieve user',
+                error='User not found',
+                status=404
+            )
             return response.to_dict(), 404
-        response = SuccessResponse(data=USER_SCHEMA.dump(user))
+        response = Response(
+            data=USER_SCHEMA.dump(user),
+            message='User retrieved successfully',
+        )
         return response.to_dict(), 200
 
     @jwt_required()
@@ -86,14 +104,24 @@ class UserResource(Resource):
         """Delete a user by ID (admin only)."""
         user_to_delete = User.query.filter(User.deleted_at.is_(None), User.id == user_id).first()
         if not user_to_delete:
-            response = ErrorResponse(message='User not found')
+            response = Response(
+                message='Unable to delete user',
+                error='User not found',
+                status=404
+            )
             return response.to_dict(), 404
         if user_to_delete.role == 'admin':
-            response = ErrorResponse(message='You cannot delete an admin user')
+            response = Response(
+                message='Unable to delete user',
+                error='The user is an admin',
+                status=400
+            )
             return response.to_dict(), 400
         user_to_delete.deleted_at = datetime.now()
         db.session.commit()
-        response = SuccessResponse(message='User deleted successfully')
+        response = Response(
+            message='User deleted successfully',
+        )
         return response.to_dict(), 200
 
     @jwt_required()
@@ -102,18 +130,33 @@ class UserResource(Resource):
         """Promote a user to admin (admin only)."""
         user_to_modify = User.query.filter(User.deleted_at.is_(None), User.id == user_id).first()
         if not user_to_modify:
-            response = ErrorResponse(message='User not found')
+            response = Response(
+                message='Unable to update user role',
+                error='User not found',
+                status=404
+            )
             return response.to_dict(), 404
         if user_to_modify.role == 'admin':
-            response = ErrorResponse(message='User is already an admin')
+            response = Response(
+                message='Unable to update user role',
+                error='User is an admin',
+                status=400
+            )
             return response.to_dict(), 400
         data = request.get_json()
         if 'role' in data and data['role'].lower() in ['admin', 'editor', 'regular']:
             user_to_modify.updated_at = datetime.now()
             user_to_modify.role = data['role'].lower()
             db.session.commit()
-            response = SuccessResponse(data=USER_SCHEMA.dump(user_to_modify), message='User role updated successfully')
+            response = Response(
+                data=USER_SCHEMA.dump(user_to_modify), 
+                message='User role updated successfully'
+            )
             return response.to_dict(), 200
         else:
-            response = ErrorResponse(message='Invalid role specified')
+            response = Response(
+                message='Unable to update user role',
+                error='Invalid role',
+                status=400
+            )
             return response.to_dict(), 400

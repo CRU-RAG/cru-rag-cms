@@ -11,7 +11,7 @@ from .resources.auth_resources import UserRegisterResource, UserLoginResource
 from .resources.user_resources import UserListResource, UserResource
 from .services.limiter import LIMITER as limiter
 from .extensions import DB as db
-from .utils.api_response import ErrorResponse
+from .utils.api_response import Response
 
 # Application Factory
 def create_app():
@@ -32,12 +32,15 @@ def create_app():
     db.init_app(app)
     limiter.init_app(app)
 
-    # @app.errorhandler(Exception)
-    # def handle_exception(e):
-    #     """Handle uncaught exceptions"""
-    #     db.session.rollback()
-    #     response = ErrorResponse(message="Something went wrong. Please try again later.")
-    #     return response.to_dict(), 500
+    @app.errorhandler(Exception)
+    def handle_exception(e):
+        """Handle uncaught exceptions"""
+        db.session.rollback()
+        response = Response(
+            message="Something went wrong. Please try again later.",
+            error=str(e),
+        )
+        return response.to_dict(), 500
 
     with app.app_context():
         # from . import routes

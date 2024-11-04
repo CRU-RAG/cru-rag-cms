@@ -9,7 +9,7 @@ from ..models.user import AdminUser, EditorUser, User
 from ..models.content import Content, ContentSchema
 from ..extensions import DB as db
 from ..services.producer import Producer
-from ..utils.api_response import SuccessResponse, ErrorResponse
+from ..utils.api_response import Response
 from ..utils.decorators import roles_required
 
 CONTENT_SCHEMA = ContentSchema()
@@ -53,7 +53,11 @@ class ContentListResource(Resource):
             "content": content.content
         }
         PRODUCER.publish_message(json.dumps(message))
-        response = SuccessResponse(data=CONTENT_SCHEMA.dump(content))
+        response = Response(
+            data=CONTENT_SCHEMA.dump(content),
+            message='Content created successfully',
+            status=201
+        )
         return response.to_dict(), 201
 
 class ContentResource(Resource):
@@ -63,9 +67,16 @@ class ContentResource(Resource):
         """Method to get a single content."""
         content = Content.query.filter(Content.deleted_at.is_(None), Content.id == id).first()
         if content:
-            response = SuccessResponse(data=CONTENT_SCHEMA.dump(content))
+            response = Response(
+                data=CONTENT_SCHEMA.dump(content),
+                message='Content retrieved successfully'
+            )
             return response.to_dict(), 200
-        response = ErrorResponse(message='Content not found')
+        response = Response(
+            message='Unable to retrieve content',
+            error='Content not found',
+            status=404
+        )
         return response.to_dict(), 404
 
     @jwt_required()
@@ -74,7 +85,11 @@ class ContentResource(Resource):
         """Method to update a single content."""
         content = Content.query.filter(Content.deleted_at.is_(None), Content.id == id).first()
         if not content:
-            response = ErrorResponse(message='Content not found')
+            response = Response(
+                message='Unable to edit content',
+                error='Content not found',
+                status=404
+            )
             return response.to_dict(), 404
         data = request.get_json()
         content.updated_at = datetime.now()
@@ -89,7 +104,10 @@ class ContentResource(Resource):
             "content": content.content
         }
         PRODUCER.publish_message(json.dumps(message))
-        response = SuccessResponse(data=CONTENT_SCHEMA.dump(content))
+        response = Response(
+            data=CONTENT_SCHEMA.dump(content),
+            message='Content updated successfully'
+        )
         return response.to_dict(), 200
 
     @jwt_required()
@@ -98,7 +116,11 @@ class ContentResource(Resource):
         """Method to delete a single content."""
         content = Content.query.filter(Content.deleted_at.is_(None), Content.id == id).first()
         if not content:
-            response = ErrorResponse(message='Content not found')
+            response = Response(
+                message='Unable to delete content',
+                error='Content not found',
+                status=404
+            )
             return response.to_dict(), 404
         content.deleted_at = datetime.now()
         db.session.commit()
@@ -111,5 +133,7 @@ class ContentResource(Resource):
             "content": None
         }
         PRODUCER.publish_message(json.dumps(message))
-        response = SuccessResponse(message='Content deleted successfully')
+        response = Response(
+            message='Content deleted successfully'
+        )
         return response.to_dict(), 200

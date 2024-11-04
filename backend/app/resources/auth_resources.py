@@ -9,7 +9,7 @@ from ..models.user import RegularUser, RegularUserSchema, User
 from ..extensions import DB as db
 from ..models.user import UserSchema
 from ..services.limiter import LIMITER as limiter
-from ..utils.api_response import SuccessResponse, ErrorResponse
+from ..utils.api_response import Response
 
 USER_SCHEMA = UserSchema()
 
@@ -20,7 +20,11 @@ class UserRegisterResource(Resource):
         """Method to register a new user"""
         data = request.get_json()
         if User.query.filter_by(username=data['username']).first():
-            response = ErrorResponse(message='User already exists')
+            response = Response(
+                message='Username unavailable',
+                error='User with this username already exists',
+                status=400
+            )
             return response.to_dict(), 400
         id = str(uuid4())
         password_bytes = data['password'].encode('utf-8')
@@ -39,7 +43,11 @@ class UserRegisterResource(Resource):
         db.session.add(new_user)
         db.session.commit()
         user_schema = RegularUserSchema()
-        response = SuccessResponse(data=user_schema.dump(new_user))
+        response = Response(
+            data=user_schema.dump(new_user),
+            message='User registered successfully',
+            status=201
+        )
         return response.to_dict(), 201
 
 class UserLoginResource(Resource):
@@ -54,10 +62,14 @@ class UserLoginResource(Resource):
             stored_hash = base64.b64decode(user.password_hash.encode('utf-8'))
             if checkpw(password_bytes, stored_hash):
                 access_token = create_access_token(identity=user.id)
-                response = SuccessResponse(
+                response = Response(
                     data={'access_token': access_token}, 
-                    message='Logged In Successfully'
+                    message='Logged In Successfully',
                 )
                 return response.to_dict(), 200
-        response = ErrorResponse(message='Invalid credentials')
+        response = Response(
+            message='Unable to Login',
+            error='Invalid credentials',
+            status=401
+        )
         return response.to_dict(), 401
