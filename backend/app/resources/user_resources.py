@@ -9,7 +9,9 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from ..models.user import AdminUser, EditorUser, RegularUser, User, UserSchema, RegularUserSchema, EditorUserSchema, AdminUserSchema
 from ..extensions import DB as db
 from .api_response import Response
-from ..utils.decorators import roles_required
+from ..middlewares.is_admin import is_admin
+from ..middlewares.is_self import is_self
+from ..middlewares.is_admin_or_self import is_admin_or_self
 
 USER_SCHEMA = UserSchema()
 USERS_SCHEMA = UserSchema(many=True)
@@ -30,7 +32,7 @@ class UserListResource(Resource):
     """Resource to handle listing users (admin only)."""
 
     @jwt_required()
-    @roles_required("admin")
+    @is_admin
     def get(self):
         """Get a list of all users (admin only)."""
         page = request.args.get('page', 1, type=int)
@@ -54,7 +56,7 @@ class UserListResource(Resource):
         return response.to_dict(), 200
     
     @jwt_required()
-    @roles_required("admin")
+    @is_admin
     def post(self):
         """Create a new user (admin only)."""
         data = request.get_json()
@@ -94,7 +96,7 @@ class UserResource(Resource):
     """Resource to handle user operations (admin only)."""
 
     @jwt_required()
-    @roles_required("admin", "self") 
+    @is_admin_or_self
     def get(self, user_id):
         """Get a user by ID (admin and the user only)."""
         user = User.query.filter(User.deleted_at.is_(None), User.id == user_id).first()
@@ -112,7 +114,7 @@ class UserResource(Resource):
         return response.to_dict(), 200
 
     @jwt_required()
-    @roles_required("admin", "self")
+    @is_admin_or_self
     def delete(self, user_id):
         """Delete a user by ID (admin only)."""
         user_to_delete = User.query.filter(User.deleted_at.is_(None), User.id == user_id).first()
@@ -138,7 +140,7 @@ class UserResource(Resource):
         return response.to_dict(), 200
 
     @jwt_required()
-    @roles_required("admin")
+    @is_admin
     def put(self, user_id):
         """Promote a user to admin (admin only)."""
         user_to_modify = User.query.filter(User.deleted_at.is_(None), User.id == user_id).first()

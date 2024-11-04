@@ -10,7 +10,7 @@ from ..models.content import Content, ContentSchema
 from ..extensions import DB as db
 from ..services.producer import Producer
 from .api_response import Response
-from ..utils.decorators import roles_required
+from ..middlewares.is_admin_or_editor import is_admin_or_editor
 
 CONTENT_SCHEMA = ContentSchema()
 CONTENTS_SCHEMA = ContentSchema(many=True)
@@ -44,7 +44,7 @@ class ContentListResource(Resource):
         return response.to_dict(), 200
 
     @jwt_required()
-    @roles_required("admin", "editor")
+    @is_admin_or_editor
     def post(self):
         """Method to create a new content."""
         data = request.get_json()
@@ -88,7 +88,7 @@ class ContentResource(Resource):
         return response.to_dict(), 404
 
     @jwt_required()
-    @roles_required("admin", "editor")
+    @is_admin_or_editor
     def put(self, id):
         """Method to update a single content."""
         content = Content.query.filter(Content.deleted_at.is_(None), Content.id == id).first()
@@ -119,7 +119,7 @@ class ContentResource(Resource):
         return response.to_dict(), 200
 
     @jwt_required()
-    @roles_required("admin", "editor")
+    @is_admin_or_editor
     def delete(self, id):
         """Method to delete a single content."""
         content = Content.query.filter(Content.deleted_at.is_(None), Content.id == id).first()
