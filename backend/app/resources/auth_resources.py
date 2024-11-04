@@ -44,7 +44,7 @@ class UserRegisterResource(Resource):
         db.session.commit()
         user_schema = RegularUserSchema()
         response = Response(
-            data=user_schema.dump(new_user),
+            payload=user_schema.dump(new_user),
             message='User registered successfully',
             status=201
         )
@@ -63,7 +63,7 @@ class UserLoginResource(Resource):
             if checkpw(password_bytes, stored_hash):
                 access_token = create_access_token(identity=user.id)
                 response = Response(
-                    data={'access_token': access_token}, 
+                    payload={'access_token': access_token}, 
                     message='Logged In Successfully',
                 )
                 return response.to_dict(), 200

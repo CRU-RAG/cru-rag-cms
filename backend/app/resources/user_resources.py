@@ -33,10 +33,23 @@ class UserListResource(Resource):
     @roles_required("admin")
     def get(self):
         """Get a list of all users (admin only)."""
-        users = User.query.filter(User.deleted_at.is_(None)).all()
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 15, type=int)
+        pagination_object = User.query.filter(User.deleted_at.is_(None)).paginate(page=page, per_page=per_page)
+        users = pagination_object.items
+        pagination_info = {
+            'total_items': pagination_object.total,
+            'total_pages': pagination_object.pages,
+            'current_page': pagination_object.page,
+            'next_page': pagination_object.next_num,
+            'prev_page': pagination_object.prev_num,
+            'per_page': pagination_object.per_page
+        }
         response = Response(
-            data=USERS_SCHEMA.dump(users),
-            message='Users retrieved successfully'
+            payload=USERS_SCHEMA.dump(users),
+            message='Users retrieved successfully',
+            status=200,
+            pagination=pagination_info
         )
         return response.to_dict(), 200
     
@@ -71,7 +84,7 @@ class UserListResource(Resource):
         db.session.commit()
         user_schema = USER_SCHEMAS.get(role, RegularUserSchema())
         response = Response(
-            data=user_schema.dump(new_user),
+            payload=user_schema.dump(new_user),
             message='User created successfully',
             status=201
         )
@@ -93,7 +106,7 @@ class UserResource(Resource):
             )
             return response.to_dict(), 404
         response = Response(
-            data=USER_SCHEMA.dump(user),
+            payload=USER_SCHEMA.dump(user),
             message='User retrieved successfully',
         )
         return response.to_dict(), 200
@@ -149,7 +162,7 @@ class UserResource(Resource):
             user_to_modify.role = data['role'].lower()
             db.session.commit()
             response = Response(
-                data=USER_SCHEMA.dump(user_to_modify), 
+                payload=USER_SCHEMA.dump(user_to_modify), 
                 message='User role updated successfully'
             )
             return response.to_dict(), 200

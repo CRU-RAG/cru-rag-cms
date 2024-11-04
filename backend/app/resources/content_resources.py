@@ -23,17 +23,25 @@ class ContentListResource(Resource):
         """Method to get all contents."""
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 15, type=int)
-        contents = Content.query.filter(
+        pagination_object = Content.query.filter(
             Content.deleted_at.is_(None)
         ).paginate(page=page, per_page=per_page)
-        return {
-            'total': contents.total,
-            'pages': contents.pages,
-            'current_page': contents.page,
-            'next_page': contents.next_num,
-            'prev_page': contents.prev_num,
-            'data': CONTENTS_SCHEMA.dump(contents.items)
-        }, 200
+        contents = pagination_object.items
+        pagination_info = {
+            'total_items': pagination_object.total,
+            'total_pages': pagination_object.pages,
+            'current_page': pagination_object.page,
+            'next_page': pagination_object.next_num,
+            'prev_page': pagination_object.prev_num,
+            'per_page': pagination_object.per_page
+        }
+        response = Response(
+            payload=CONTENTS_SCHEMA.dump(contents),
+            message='Contents retrieved successfully',
+            status=200,
+            pagination=pagination_info
+        )
+        return response.to_dict(), 200
 
     @jwt_required()
     @roles_required("admin", "editor")
@@ -54,7 +62,7 @@ class ContentListResource(Resource):
         }
         PRODUCER.publish_message(json.dumps(message))
         response = Response(
-            data=CONTENT_SCHEMA.dump(content),
+            payload=CONTENT_SCHEMA.dump(content),
             message='Content created successfully',
             status=201
         )
@@ -68,7 +76,7 @@ class ContentResource(Resource):
         content = Content.query.filter(Content.deleted_at.is_(None), Content.id == id).first()
         if content:
             response = Response(
-                data=CONTENT_SCHEMA.dump(content),
+                payload=CONTENT_SCHEMA.dump(content),
                 message='Content retrieved successfully'
             )
             return response.to_dict(), 200
@@ -105,7 +113,7 @@ class ContentResource(Resource):
         }
         PRODUCER.publish_message(json.dumps(message))
         response = Response(
-            data=CONTENT_SCHEMA.dump(content),
+            payload=CONTENT_SCHEMA.dump(content),
             message='Content updated successfully'
         )
         return response.to_dict(), 200
