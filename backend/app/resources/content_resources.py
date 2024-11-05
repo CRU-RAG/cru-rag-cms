@@ -9,14 +9,14 @@ from ..models.user import AdminUser, EditorUser, User
 from ..models.content import Content, ContentSchema
 from ..extensions import DB as db
 from ..services.producer import Producer
-from .api_response import Response
+from .base_resource import BaseResource
 from ..middlewares.is_admin_or_editor import is_admin_or_editor
 
 CONTENT_SCHEMA = ContentSchema()
 CONTENTS_SCHEMA = ContentSchema(many=True)
 PRODUCER = Producer()
 
-class ContentListResource(Resource):
+class ContentListResource(BaseResource):
     """Resource to handle the content list."""
     @jwt_required()
     def get(self):
@@ -35,13 +35,12 @@ class ContentListResource(Resource):
             'prev_page': pagination_object.prev_num,
             'per_page': pagination_object.per_page
         }
-        response = Response(
+        return self.make_response(
             payload=CONTENTS_SCHEMA.dump(contents),
             message='Contents retrieved successfully',
             status=200,
             pagination=pagination_info
         )
-        return response.to_dict(), 200
 
     @jwt_required()
     @is_admin_or_editor
@@ -61,31 +60,28 @@ class ContentListResource(Resource):
             "content": content.content
         }
         PRODUCER.publish_message(json.dumps(message))
-        response = Response(
+        return self.make_response(
             payload=CONTENT_SCHEMA.dump(content),
             message='Content created successfully',
             status=201
         )
-        return response.to_dict(), 201
 
-class ContentResource(Resource):
+class ContentResource(BaseResource):
     """Resource to handle a single content."""
     @jwt_required()
     def get(self, id):
         """Method to get a single content."""
         content = Content.query.filter(Content.deleted_at.is_(None), Content.id == id).first()
         if content:
-            response = Response(
+            return self.make_response(
                 payload=CONTENT_SCHEMA.dump(content),
                 message='Content retrieved successfully'
             )
-            return response.to_dict(), 200
-        response = Response(
+        return self.make_response(
             message='Unable to retrieve content',
             error='Content not found',
             status=404
         )
-        return response.to_dict(), 404
 
     @jwt_required()
     @is_admin_or_editor
@@ -93,12 +89,11 @@ class ContentResource(Resource):
         """Method to update a single content."""
         content = Content.query.filter(Content.deleted_at.is_(None), Content.id == id).first()
         if not content:
-            response = Response(
+            return self.make_response(
                 message='Unable to edit content',
                 error='Content not found',
                 status=404
             )
-            return response.to_dict(), 404
         data = request.get_json()
         content.updated_at = datetime.now()
         content = CONTENT_SCHEMA.load(data, instance=content, partial=True, session=db.session)
@@ -112,11 +107,10 @@ class ContentResource(Resource):
             "content": content.content
         }
         PRODUCER.publish_message(json.dumps(message))
-        response = Response(
+        return self.make_response(
             payload=CONTENT_SCHEMA.dump(content),
             message='Content updated successfully'
         )
-        return response.to_dict(), 200
 
     @jwt_required()
     @is_admin_or_editor
@@ -124,12 +118,11 @@ class ContentResource(Resource):
         """Method to delete a single content."""
         content = Content.query.filter(Content.deleted_at.is_(None), Content.id == id).first()
         if not content:
-            response = Response(
+            return self.make_response(
                 message='Unable to delete content',
                 error='Content not found',
                 status=404
             )
-            return response.to_dict(), 404
         content.deleted_at = datetime.now()
         db.session.commit()
 
@@ -141,7 +134,6 @@ class ContentResource(Resource):
             "content": None
         }
         PRODUCER.publish_message(json.dumps(message))
-        response = Response(
+        return self.make_response(
             message='Content deleted successfully'
         )
-        return response.to_dict(), 200

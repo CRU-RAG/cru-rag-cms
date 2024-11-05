@@ -6,9 +6,9 @@ from bcrypt import gensalt, hashpw
 from flask_restful import Resource
 from flask import request
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from .base_resource import BaseResource
 from ..models.user import AdminUser, EditorUser, RegularUser, User, UserSchema, RegularUserSchema, EditorUserSchema, AdminUserSchema
 from ..extensions import DB as db
-from .api_response import Response
 from ..middlewares.is_admin import is_admin
 from ..middlewares.is_self import is_self
 from ..middlewares.is_admin_or_self import is_admin_or_self
@@ -28,7 +28,7 @@ USER_SCHEMAS = {
     'editor': EditorUserSchema()
 }
 
-class UserListResource(Resource):
+class UserListResource(BaseResource):
     """Resource to handle listing users (admin only)."""
 
     @jwt_required()
@@ -47,13 +47,12 @@ class UserListResource(Resource):
             'prev_page': pagination_object.prev_num,
             'per_page': pagination_object.per_page
         }
-        response = Response(
+        return self.make_response(
             payload=USERS_SCHEMA.dump(users),
+            pagination=pagination_info,
             message='Users retrieved successfully',
-            status=200,
             pagination=pagination_info
         )
-        return response.to_dict(), 200
     
     @jwt_required()
     @is_admin
@@ -61,12 +60,11 @@ class UserListResource(Resource):
         """Create a new user (admin only)."""
         data = request.get_json()
         if User.query.filter_by(username=data['username']).first():
-            response = Response(
+            return self.make_response(
                 message='Unable to create user',
                 error='User already exists',
                 status=400
             )
-            return response.to_dict(), 400
         password_bytes = data['password'].encode('utf-8')
         hashed_password = hashpw(password_bytes, gensalt())
         hashed_password_str = base64.b64encode(hashed_password).decode('utf-8')
@@ -85,14 +83,13 @@ class UserListResource(Resource):
         db.session.add(new_user)
         db.session.commit()
         user_schema = USER_SCHEMAS.get(role, RegularUserSchema())
-        response = Response(
+        return self.make_response(
             payload=user_schema.dump(new_user),
             message='User created successfully',
             status=201
         )
-        return response.to_dict(), 201
 
-class UserResource(Resource):
+class UserResource(BaseResource):
     """Resource to handle user operations (admin only)."""
 
     @jwt_required()
@@ -101,17 +98,15 @@ class UserResource(Resource):
         """Get a user by ID (admin and the user only)."""
         user = User.query.filter(User.deleted_at.is_(None), User.id == user_id).first()
         if not user:
-            response = Response(
+            return self.make_response(
                 message='Unable to retrieve user',
                 error='User not found',
                 status=404
             )
-            return response.to_dict(), 404
-        response = Response(
+        return self.make_response(
             payload=USER_SCHEMA.dump(user),
             message='User retrieved successfully',
         )
-        return response.to_dict(), 200
 
     @jwt_required()
     @is_admin_or_self
@@ -119,25 +114,22 @@ class UserResource(Resource):
         """Delete a user by ID (admin only)."""
         user_to_delete = User.query.filter(User.deleted_at.is_(None), User.id == user_id).first()
         if not user_to_delete:
-            response = Response(
+            return self.make_response(
                 message='Unable to delete user',
                 error='User not found',
                 status=404
             )
-            return response.to_dict(), 404
         if user_to_delete.role == 'admin':
-            response = Response(
+            return self.make_response(
                 message='Unable to delete user',
                 error='The user is an admin',
                 status=400
             )
-            return response.to_dict(), 400
         user_to_delete.deleted_at = datetime.now()
         db.session.commit()
-        response = Response(
+        return self.make_response(
             message='User deleted successfully',
         )
-        return response.to_dict(), 200
 
     @jwt_required()
     @is_admin
@@ -145,33 +137,29 @@ class UserResource(Resource):
         """Promote a user to admin (admin only)."""
         user_to_modify = User.query.filter(User.deleted_at.is_(None), User.id == user_id).first()
         if not user_to_modify:
-            response = Response(
+            return self.make_response(
                 message='Unable to update user role',
                 error='User not found',
                 status=404
             )
-            return response.to_dict(), 404
         if user_to_modify.role == 'admin':
-            response = Response(
+            return self.make_response(
                 message='Unable to update user role',
                 error='User is an admin',
                 status=400
             )
-            return response.to_dict(), 400
         data = request.get_json()
         if 'role' in data and data['role'].lower() in ['admin', 'editor', 'regular']:
             user_to_modify.updated_at = datetime.now()
             user_to_modify.role = data['role'].lower()
             db.session.commit()
-            response = Response(
+            return self.make_response(
                 payload=USER_SCHEMA.dump(user_to_modify), 
                 message='User role updated successfully'
             )
-            return response.to_dict(), 200
         else:
-            response = Response(
+            return self.make_response(
                 message='Unable to update user role',
                 error='Invalid role',
                 status=400
             )
-            return response.to_dict(), 400
