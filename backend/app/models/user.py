@@ -4,16 +4,11 @@ from enum import Enum
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from ..extensions import DB as db
 
-class UserRole(Enum):
-    ADMIN = "Admin"
-    EDITOR = "Editor"
-    REGULAR = "Regular"
-
 class User(db.Model):
     """Users model"""
     __tablename__ = 'users'
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.String(100), primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     first_name = db.Column(db.String(80), nullable=False)
     middle_name = db.Column(db.String(80), nullable=True)
@@ -25,13 +20,9 @@ class User(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.now(), nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.now(), nullable=False)
     deleted_at = db.Column(db.DateTime, nullable=True)
-    role = db.Column(
-        db.Enum(UserRole, name='user_role', native_enum=False), 
-        nullable=False, 
-        default=UserRole.REGULAR
-    )
+    role = db.Column(db.String(50), nullable=False)
 
-    def __init__(self, username, password_hash, first_name, middle_name, last_name, email, phone_number):
+    def __init__(self, username, password_hash, first_name, middle_name, last_name, email, phone_number, role):
         """Initialize user"""
         self.username = username
         self.password_hash = password_hash
@@ -40,11 +31,48 @@ class User(db.Model):
         self.last_name = last_name
         self.email = email
         self.phone_number = phone_number
+        self.role = role
+
+class RegularUser(User):
+    """Regular User model"""
+
+    def __init__(self, username, password_hash, first_name, middle_name, last_name, email, phone_number):
+        super().__init__(username, password_hash, first_name, middle_name, last_name, email, phone_number, 'regular')
+
+class EditorUser(User):
+    """Editor User model"""
+
+    def __init__(self, username, password_hash, first_name, middle_name, last_name, email, phone_number):
+        super().__init__(username, password_hash, first_name, middle_name, last_name, email, phone_number, 'editor')
+
+class AdminUser(User):
+    """Admin User model"""
+
+    def __init__(self, username, password_hash, first_name, middle_name, last_name, email, phone_number):
+        super().__init__(username, password_hash, first_name, middle_name, last_name, email, phone_number, 'admin')
 
 class UserSchema(SQLAlchemyAutoSchema):
-    """User Schema"""
+    """Base User Schema"""
     class Meta:
         """Meta class for User Schema"""
         model = User
         load_instance = True
         exclude = ("password_hash",)
+
+class RegularUserSchema(UserSchema):
+    """Regular User Schema"""
+    class Meta(UserSchema.Meta):
+        """Meta class for Regular User Schema"""
+        model = RegularUser
+
+class EditorUserSchema(UserSchema):
+    """Editor User Schema"""
+    class Meta(UserSchema.Meta):
+        """Meta class for Editor User Schema"""
+        model = EditorUser
+
+class AdminUserSchema(UserSchema):
+    """Admin User Schema"""
+    class Meta(UserSchema.Meta):
+        """Meta class for Admin User Schema"""
+        model = AdminUser

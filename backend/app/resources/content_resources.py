@@ -5,34 +5,45 @@ from uuid import uuid4
 from flask_restful import Resource
 from flask import request
 from flask_jwt_extended import jwt_required
-from ..models.content import Content, db
-from ..models.content import ContentSchema
+from ..models.user import AdminUser, EditorUser, User
+from ..models.content import Content, ContentSchema
+from ..extensions import DB as db
 from ..services.producer import Producer
+from .base_resource import BaseResource
+from ..middlewares.is_admin_or_editor import is_admin_or_editor
 
 CONTENT_SCHEMA = ContentSchema()
 CONTENTS_SCHEMA = ContentSchema(many=True)
 PRODUCER = Producer()
 
-class ContentListResource(Resource):
+class ContentListResource(BaseResource):
     """Resource to handle the content list."""
     @jwt_required()
     def get(self):
         """Method to get all contents."""
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 15, type=int)
-        contents = Content.query.filter(
+        pagination_object = Content.query.filter(
             Content.deleted_at.is_(None)
         ).paginate(page=page, per_page=per_page)
-        return {
-            'total': contents.total,
-            'pages': contents.pages,
-            'current_page': contents.page,
-            'next_page': contents.next_num,
-            'prev_page': contents.prev_num,
-            'data': CONTENTS_SCHEMA.dump(contents.items)
-        }, 200
+        contents = pagination_object.items
+        pagination_info = {
+            'total_items': pagination_object.total,
+            'total_pages': pagination_object.pages,
+            'current_page': pagination_object.page,
+            'next_page': pagination_object.next_num,
+            'prev_page': pagination_object.prev_num,
+            'per_page': pagination_object.per_page
+        }
+        return self.make_response(
+            payload=CONTENTS_SCHEMA.dump(contents),
+            message='Contents retrieved successfully',
+            status=200,
+            pagination=pagination_info
+        )
 
     @jwt_required()
+    @is_admin_or_editor
     def post(self):
         """Method to create a new content."""
         data = request.get_json()
@@ -49,23 +60,40 @@ class ContentListResource(Resource):
             "content": content.content
         }
         PRODUCER.publish_message(json.dumps(message))
+        return self.make_response(
+            payload=CONTENT_SCHEMA.dump(content),
+            message='Content created successfully',
+            status=201
+        )
 
-        return CONTENT_SCHEMA.dump(content), 201
-
-class ContentResource(Resource):
+class ContentResource(BaseResource):
     """Resource to handle a single content."""
     @jwt_required()
     def get(self, id):
         """Method to get a single content."""
         content = Content.query.filter(Content.deleted_at.is_(None), Content.id == id).first()
         if content:
-            return CONTENT_SCHEMA.dump(content), 200
-        return {'message': 'Content not found'}, 404
+            return self.make_response(
+                payload=CONTENT_SCHEMA.dump(content),
+                message='Content retrieved successfully'
+            )
+        return self.make_response(
+            message='Unable to retrieve content',
+            error='Content not found',
+            status=404
+        )
 
     @jwt_required()
+    @is_admin_or_editor
     def put(self, id):
         """Method to update a single content."""
-        content = Content.query.get_or_404(id)
+        content = Content.query.filter(Content.deleted_at.is_(None), Content.id == id).first()
+        if not content:
+            return self.make_response(
+                message='Unable to edit content',
+                error='Content not found',
+                status=404
+            )
         data = request.get_json()
         content.updated_at = datetime.now()
         content = CONTENT_SCHEMA.load(data, instance=content, partial=True, session=db.session)
@@ -79,16 +107,23 @@ class ContentResource(Resource):
             "content": content.content
         }
         PRODUCER.publish_message(json.dumps(message))
-
-        return CONTENT_SCHEMA.dump(content), 200
+        return self.make_response(
+            payload=CONTENT_SCHEMA.dump(content),
+            message='Content updated successfully'
+        )
 
     @jwt_required()
+    @is_admin_or_editor
     def delete(self, id):
         """Method to delete a single content."""
-        content = Content.query.get_or_404(id)
-        data = request.get_json()
+        content = Content.query.filter(Content.deleted_at.is_(None), Content.id == id).first()
+        if not content:
+            return self.make_response(
+                message='Unable to delete content',
+                error='Content not found',
+                status=404
+            )
         content.deleted_at = datetime.now()
-        content = CONTENT_SCHEMA.load(data, instance=content, partial=True, session=db.session)
         db.session.commit()
 
         # Publish message to RabbitMQ
@@ -99,5 +134,6 @@ class ContentResource(Resource):
             "content": None
         }
         PRODUCER.publish_message(json.dumps(message))
-
-        return CONTENT_SCHEMA.dump(content), 204
+        return self.make_response(
+            message='Content deleted successfully'
+        )

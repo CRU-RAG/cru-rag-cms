@@ -1,7 +1,10 @@
 """Message producer service"""
 import os
 from concurrent.futures import ThreadPoolExecutor
+from dotenv import load_dotenv
 import pika
+
+load_dotenv()
 
 class Producer:
     """Service to produce messages to RabbitMQ."""
@@ -9,8 +12,8 @@ class Producer:
         """Initialize the producer service."""
         self.executor = ThreadPoolExecutor(max_workers=2)
         self.credentials = pika.PlainCredentials(
-            os.environ.get("RABBIT_MQ_USERNAME"),
-            os.environ.get("RABBIT_MQ_PASSWORD")
+            os.getenv("RABBIT_MQ_USERNAME"),
+            os.getenv("RABBIT_MQ_PASSWORD")
         )
         self.connection_params = pika.ConnectionParameters(
             os.environ.get("RABBIT_MQ_HOST"),
