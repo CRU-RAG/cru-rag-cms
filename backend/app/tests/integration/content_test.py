@@ -1,101 +1,38 @@
 """Integration tests for content related endpoints"""
-import os
-import tempfile
 import unittest
 import json
 import base64
 from uuid import uuid4
 from app import create_app
 from app.extensions import DB as db
+from app.tests.integration.base_test import BaseTestCase
+from app.models.user import AdminUser
+from bcrypt import hashpw, gensalt
 from flask_jwt_extended import create_access_token
 
-class ContentIntegrationTestCase(unittest.TestCase):
+class ContentIntegrationTestCase(BaseTestCase):
     """Integration tests for content-related endpoints"""
 
     def setUp(self):
         """Set up test variables and initialize app"""
          # Create a temporary file to use as the database
-        self.db_fd, self.db_path = tempfile.mkstemp()
-        self.app = create_app()
-        self.app.config['TESTING'] = True
-        self.app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + self.db_path
-        self.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-        self.client = self.app.test_client()
-        with self.app.app_context():
-            db.create_all()
-            # Create an admin user
-            from app.models.user import AdminUser
-            from bcrypt import hashpw, gensalt
-            password_bytes = 'adminpass'.encode('utf-8')
-            hashed_password = hashpw(password_bytes, gensalt())
-            hashed_password_str = base64.b64encode(hashed_password).decode('utf-8')
-            admin_user = AdminUser(
-                username=f'adminuser_{str(uuid4())}',
-                password_hash=hashed_password_str,
-                first_name='Admin',
-                middle_name='',
-                last_name='User',
-                email=f'admin_{str(uuid4())}@example.com',
-                phone_number=''
-            )
-            admin_user.id = str(uuid4())
-            db.session.add(admin_user)
-            db.session.commit()
-            self.admin_user_id = admin_user.id
-
-            # Create a regular user
-            from app.models.user import RegularUser
-            password_bytes = 'userpass'.encode('utf-8')
-            hashed_password = hashpw(password_bytes, gensalt())
-            hashed_password_str = base64.b64encode(hashed_password).decode('utf-8')
-            regular_user = RegularUser(
-                username=f'testuser_{str(uuid4())}',
-                password_hash=hashed_password_str,
-                first_name='Test',
-                middle_name='',
-                last_name='User',
-                email=f'testuser_{str(uuid4())}@example.com',
-                phone_number=''
-            )
-            regular_user.id = str(uuid4())
-            db.session.add(regular_user)
-            db.session.commit()
-            self.regular_user_id = regular_user.id
-
-            # Create an editor user
-            from app.models.user import EditorUser
-            password_bytes = 'editorpass'.encode('utf-8')
-            hashed_password = hashpw(password_bytes, gensalt())
-            hashed_password_str = base64.b64encode(hashed_password).decode('utf-8')
-            editor_user = EditorUser(
-                username=f'editoruser_{str(uuid4())}',
-                password_hash=hashed_password_str,
-                first_name='Editor',
-                middle_name='',
-                last_name='User',
-                email=f'editor_{str(uuid4())}@example.com',
-                phone_number=''
-            )
-            editor_user.id = str(uuid4())
-            db.session.add(editor_user)
-            db.session.commit()
-            self.editor_user_id = editor_user.id
-
-        self.client = self.app.test_client()
-
-    def tearDown(self):
-        """Teardown all initialized variables."""
-        with self.app.app_context():
-            db.session.remove()
-            db.drop_all()
-
-    def get_auth_headers(self, user_id):
-        """Helper method to get authentication headers"""
-        with self.app.app_context():
-            access_token = create_access_token(identity=user_id)
-        return {
-            'Authorization': f'Bearer {access_token}'
-        }
+        # Create an admin user
+        super().setUp()
+        # Create admin user
+        admin_user = self.create_admin_user()
+        db.session.add(admin_user)
+        db.session.commit()
+        self.admin_user_id = admin_user.id
+        # Create regular user
+        regular_user = self.create_regular_user()
+        db.session.add(regular_user)
+        db.session.commit()
+        self.regular_user_id = regular_user.id
+        # Create an editor user
+        editor_user = self.create_editor_user()
+        db.session.add(editor_user)
+        db.session.commit()
+        self.editor_user_id = editor_user.id
 
     def test_get_all_contents(self):
         """Test retrieving all contents"""

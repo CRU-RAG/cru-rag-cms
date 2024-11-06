@@ -1,65 +1,27 @@
 """Integration tests for user related endpoints"""
-import os
-import tempfile
+import json
 import unittest
 import base64
 from app import create_app
 from app.extensions import DB as db
 from flask import json
 from flask_jwt_extended import create_access_token
+from app.tests.integration.base_test import BaseTestCase
+from app.models.user import AdminUser
+from uuid import uuid4
+from bcrypt import hashpw, gensalt
 
 
-class UserIntegrationTestCase(unittest.TestCase):
+class UserIntegrationTestCase(BaseTestCase):
     """Integration tests for user-related endpoints"""
 
     def setUp(self):
         """Set up test variables and initialize app"""
-        # Create a temporary file to use as the database
-        self.db_fd, self.db_path = tempfile.mkstemp()
-        self.app = create_app()
-        self.app.config['TESTING'] = True
-        self.app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + self.db_path
-        self.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-        self.client = self.app.test_client()
-        with self.app.app_context():
-            db.create_all()
-            # Create an admin user
-            from app.models.user import AdminUser
-            from uuid import uuid4
-            from bcrypt import hashpw, gensalt
-            password_bytes = 'adminpass'.encode('utf-8')
-            hashed_password = hashpw(password_bytes, gensalt())
-            hashed_password_str = base64.b64encode(hashed_password).decode('utf-8')
-            admin_user = AdminUser(
-                username='adminuser',
-                password_hash=hashed_password_str,
-                first_name='Admin',
-                middle_name='',
-                last_name='User',
-                email='admin@example.com',
-                phone_number='',
-            )
-            admin_user.id = str(uuid4())
-            db.session.add(admin_user)
-            db.session.commit()
-            self.admin_user_id = admin_user.id
-
-    def tearDown(self):
-        """Teardown all initialized variables."""
-        with self.app.app_context():
-            db.session.remove()
-            db.drop_all()
-        # Close and remove the temporary database
-        os.close(self.db_fd)
-        os.unlink(self.db_path)
-
-    def get_auth_headers(self, user_id):
-        """Helper method to get authentication headers"""
-        with self.app.app_context():
-            access_token = create_access_token(identity=user_id)
-        return {
-            'Authorization': f'Bearer {access_token}'
-        }
+        super().setUp()
+        admin_user = self.create_admin_user()
+        db.session.add(admin_user)
+        db.session.commit()
+        self.admin_user_id = admin_user.id
 
     def test_user_registration(self):
         """Test user registration endpoint"""
