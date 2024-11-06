@@ -51,7 +51,6 @@ class UserListResource(BaseResource):
             payload=USERS_SCHEMA.dump(users),
             pagination=pagination_info,
             message='Users retrieved successfully',
-            pagination=pagination_info
         )
     
     @jwt_required()
