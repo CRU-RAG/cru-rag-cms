@@ -2,5 +2,6 @@
 env
 instance
 __pycache__
+*.pyc
 insert_entry.sql
 .vscode
