@@ -50,7 +50,7 @@ This document provides instructions on how to set up and run the Versewise CMS b
     ```
     Open the `.env` file in a text editor and update the values as needed.
 
-5. **Run the application:**
+6. **Run the application:**
 
     ```bash
     python3 run.py
@@ -65,13 +65,20 @@ This document provides instructions on how to set up and run the Versewise CMS b
     cd verse-wise-cms/backend
     ```
 
-2. **Build the Docker image:**
+2. **Set Up Environment Variables:**
+    Copy .env.example to .env
+    ```bash
+    cp .env.example .env
+    ```
+    Open the `.env` file in a text editor and update the values as needed.
+
+3. **Build the Docker image:**
 
     ```bash
     docker build --network=host -t versewise-cms-backend .
     ```
 
-3. **Run the Docker container:**
+4. **Run the Docker container:**
 
     ```bash
     docker run -p 5000:5000 versewise-cms-backend
