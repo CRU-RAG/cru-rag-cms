@@ -2,6 +2,7 @@ version: '2.2'
 
 services:
   versewise-cms-backend:
+    container_name: versewise-cms-backend
     build:
       context: .
       network: host
