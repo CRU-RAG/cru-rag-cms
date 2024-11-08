@@ -1,0 +1,14 @@
+version: '2.2'
+
+services:
+  versewise-cms-backend:
+    build:
+      context: .
+      network: host
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    volumes:
+      - .:/versewise-cms-backend
+    restart: unless-stopped

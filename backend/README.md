@@ -84,6 +84,35 @@ This document provides instructions on how to set up and run the Versewise CMS b
     docker run -p 5000:5000 versewise-cms-backend
     ```
 
+## Running with Docker Compose
+
+1. **Clone the repository:**
+
+    ```bash
+    git clone https://github.com/VerseWise/verse-wise-cms.git
+    cd verse-wise-cms/backend
+    ```
+
+2. **Set Up Environment Variables:**
+
+    Copy `.env.example` to `.env`:
+
+    ```bash
+    cp .env.example .env
+    ```
+
+    Open the `.env` file in a text editor and update the values as needed.
+
+3. **Run the application with Docker Compose:**
+
+    ```bash
+    docker-compose up
+    ```
+
+4. **Access the Application:**
+
+    Once the application is running, you can access it at `http://localhost:5000`.
+
 ## Accessing the Application
 
 Once the application is running, you can access it at `http://localhost:5000`.
