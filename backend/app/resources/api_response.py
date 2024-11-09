@@ -1,19 +1,24 @@
 """API response classes."""
+
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional
 from datetime import datetime
 
+
+# pylint: disable=too-few-public-methods
 class ApiResponse(ABC):
     """Abstract base class for API responses."""
 
     @abstractmethod
     def to_dict(self) -> Dict[str, Any]:
         """Convert the response to a dictionary."""
-        pass
 
+
+# pylint: disable=too-few-public-methods
 class Response(ApiResponse):
     """API response class."""
 
+    # pylint: disable=too-many-arguments
     def __init__(
         self,
         payload: Any = None,
@@ -30,7 +35,7 @@ class Response(ApiResponse):
         self.status = status
         self.pagination = pagination
         self.response_generated_at = response_generated_at or datetime.now().isoformat()
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert the response to a dictionary."""
         response = {
