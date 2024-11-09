@@ -1,4 +1,5 @@
 """Entry point for the application."""
+
 from flask import Flask
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
@@ -13,6 +14,7 @@ from .services.limiter import LIMITER as limiter
 from .extensions import DB as db
 from .resources.api_response import Response
 
+
 # Application Factory
 def create_app():
     """Create a Flask application."""
@@ -21,13 +23,13 @@ def create_app():
     JWTManager(app)
     Bcrypt(app)
     api = Api(app)
-    api.add_resource(ContentListResource, '/contents')
-    api.add_resource(ContentResource, '/contents/<string:id>')
-    api.add_resource(UserListResource, '/users')
-    api.add_resource(UserResource, '/users/<string:user_id>')
-    api.add_resource(UserRegisterResource, '/register')
-    api.add_resource(UserLoginResource, '/login')
-    app.config.from_object('config.Config')
+    api.add_resource(ContentListResource, "/contents")
+    api.add_resource(ContentResource, "/contents/<string:content_id>")
+    api.add_resource(UserListResource, "/users")
+    api.add_resource(UserResource, "/users/<string:user_id>")
+    api.add_resource(UserRegisterResource, "/register")
+    api.add_resource(UserLoginResource, "/login")
+    app.config.from_object("config.Config")
 
     db.init_app(app)
     limiter.init_app(app)
@@ -43,7 +45,6 @@ def create_app():
         return response.to_dict(), 500
 
     with app.app_context():
-        # from . import routes
         db.create_all()
 
     return app
