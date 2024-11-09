@@ -6,7 +6,7 @@ services:
     build:
       context: .
     ports:
-      - "${HOST_PORT}:5000"
+      - "${CMS_API_PORT}:5000"
     env_file:
       - .env
     volumes:
