@@ -1,6 +1,14 @@
 # Use the official Python 3.8 slim image as the base image
 FROM python:3.8-slim
 
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libssl-dev \
+    libffi-dev \
+    python3-dev \
+    && rm -rf /var/lib/apt/lists/*
+
 # Set the working directory within the container
 WORKDIR /versewise-cms-backend
 

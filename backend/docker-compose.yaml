@@ -1,6 +1,22 @@
 version: '2.2'
 
 services:
+  versewise-cms-db:
+    image: mysql:8.0
+    container_name: versewise-cms-db
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - db-data:/var/lib/mysql
+    ports:
+      - "${MYSQL_DATABASE_PORT}:3306"
+    networks:
+      - versewise-networks
+
   versewise-cms-backend:
     container_name: versewise-cms-backend
     build:
@@ -18,3 +34,6 @@ services:
 networks:
   versewise-networks:
     driver: bridge
+
+volumes:
+  db-data:
