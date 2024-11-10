@@ -5,3 +5,4 @@ __pycache__
 *.pyc
 insert_entry.sql
 .vscode
+init.sql
