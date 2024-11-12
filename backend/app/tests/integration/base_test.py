@@ -1,6 +1,7 @@
 """Base test case for all test cases"""
 
 import base64
+import json
 import unittest
 import os
 import tempfile
@@ -95,3 +96,25 @@ class BaseTestCase(unittest.TestCase):
         )
         editor_user.id = str(uuid4())
         return editor_user
+
+    def register_test_user(self):
+        """Helper method to register a test user"""
+        return self.client.post(
+            "/register",
+            json={
+                "username": "testuser",
+                "password": "testpass",
+                "first_name": "Test",
+                "last_name": "User",
+                "email": "testuser@example.com",
+            },
+        )
+
+    def login_test_user(self):
+        """Helper method to log in a test user"""
+        self.register_test_user()
+        response = self.client.post(
+            "/login", json={"username": "testuser", "password": "testpass"}
+        )
+        data = json.loads(response.data)
+        self.user_access_token = data["payload"]["access_token"]

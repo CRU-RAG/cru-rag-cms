@@ -5,6 +5,8 @@ import json
 from uuid import uuid4
 from flask import request
 from flask_jwt_extended import jwt_required
+
+from app.utils.pagination import get_pagination_info
 from ..models.content import Content, ContentSchema
 from ..extensions import DB as db
 from ..services.producer import Producer
@@ -28,14 +30,7 @@ class ContentListResource(BaseResource):
             page=page, per_page=per_page
         )
         contents = pagination_object.items
-        pagination_info = {
-            "total_items": pagination_object.total,
-            "total_pages": pagination_object.pages,
-            "current_page": pagination_object.page,
-            "next_page": pagination_object.next_num,
-            "prev_page": pagination_object.prev_num,
-            "per_page": pagination_object.per_page,
-        }
+        pagination_info = get_pagination_info(pagination_object)
         return self.make_response(
             payload=CONTENTS_SCHEMA.dump(contents),
             message="Contents retrieved successfully",
