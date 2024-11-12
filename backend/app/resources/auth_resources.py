@@ -3,8 +3,10 @@
 import base64
 from flask import request
 from flask_jwt_extended import create_access_token
-from bcrypt import hashpw, gensalt, checkpw
-from ..models.user import RegularUser, RegularUserSchema, User
+from bcrypt import checkpw
+
+from app.utils.user_factory import create_user_instance
+from ..models.user import RegularUserSchema, User
 from ..extensions import DB as db
 from ..models.user import UserSchema
 from ..services.limiter import LIMITER as limiter
@@ -26,18 +28,7 @@ class UserRegisterResource(BaseResource):
                 error="User with this username already exists",
                 status=400,
             )
-        password_bytes = data["password"].encode("utf-8")
-        hashed_password = hashpw(password_bytes, gensalt())
-        hashed_password_str = base64.b64encode(hashed_password).decode("utf-8")
-        new_user = RegularUser(
-            username=data["username"],
-            first_name=data["first_name"],
-            middle_name=data.get("middle_name", ""),
-            last_name=data["last_name"],
-            email=data["email"],
-            phone_number=data.get("phone_number", ""),
-            password_hash=hashed_password_str,
-        )
+        new_user = create_user_instance(data)
         db.session.add(new_user)
         db.session.commit()
         user_schema = RegularUserSchema()

@@ -1,16 +1,14 @@
 """Definitions of user resources."""
 
-import base64
 from datetime import datetime
 from uuid import uuid4
-from bcrypt import gensalt, hashpw
 from flask import request
 from flask_jwt_extended import jwt_required
+
+from app.utils.pagination import get_pagination_info
+from app.utils.user_factory import create_user_instance
 from .base_resource import BaseResource
 from ..models.user import (
-    AdminUser,
-    EditorUser,
-    RegularUser,
     User,
     UserSchema,
     RegularUserSchema,
@@ -23,8 +21,6 @@ from ..middlewares.is_admin_or_self import is_admin_or_self
 
 USER_SCHEMA = UserSchema()
 USERS_SCHEMA = UserSchema(many=True)
-
-USER_CLASSES = {"regular": RegularUser, "admin": AdminUser, "editor": EditorUser}
 
 USER_SCHEMAS = {
     "regular": RegularUserSchema(),
@@ -46,14 +42,7 @@ class UserListResource(BaseResource):
             page=page, per_page=per_page
         )
         users = pagination_object.items
-        pagination_info = {
-            "total_items": pagination_object.total,
-            "total_pages": pagination_object.pages,
-            "current_page": pagination_object.page,
-            "next_page": pagination_object.next_num,
-            "prev_page": pagination_object.prev_num,
-            "per_page": pagination_object.per_page,
-        }
+        pagination_info = get_pagination_info(pagination_object)
         return self.make_response(
             payload=USERS_SCHEMA.dump(users),
             pagination=pagination_info,
@@ -69,24 +58,11 @@ class UserListResource(BaseResource):
             return self.make_response(
                 message="Unable to create user", error="User already exists", status=400
             )
-        password_bytes = data["password"].encode("utf-8")
-        hashed_password = hashpw(password_bytes, gensalt())
-        hashed_password_str = base64.b64encode(hashed_password).decode("utf-8")
-        role = data.get("role", "regular").lower()
-        user_class = USER_CLASSES.get(role, RegularUser)
-        new_user = user_class(
-            username=data["username"],
-            first_name=data["first_name"],
-            middle_name=data.get("middle_name", ""),
-            last_name=data["last_name"],
-            email=data["email"],
-            phone_number=data.get("phone_number", ""),
-            password_hash=hashed_password_str,
-        )
+        new_user = create_user_instance(data)
         new_user.id = str(uuid4())
         db.session.add(new_user)
         db.session.commit()
-        user_schema = USER_SCHEMAS.get(role, RegularUserSchema())
+        user_schema = USER_SCHEMAS.get(new_user.role, RegularUserSchema())
         return self.make_response(
             payload=user_schema.dump(new_user),
             message="User created successfully",
