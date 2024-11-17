@@ -38,16 +38,16 @@ def create_app():
     db.init_app(app)
     limiter.init_app(app)
 
-    # @app.errorhandler(Exception)
-    # def handle_exception(e):
-    #     """Handle uncaught exceptions"""
-    #     db.session.rollback()
-    #     response = Response(
-    #         message="Something went wrong. Please try again later.",
-    #         error=str(e),
-    #         status=500,
-    #     )
-    #     return response.to_dict(), 500
+    @app.errorhandler(Exception)
+    def handle_exception(e):
+        """Handle uncaught exceptions"""
+        db.session.rollback()
+        response = Response(
+            message="Something went wrong. Please try again later.",
+            error=str(e),
+            status=500,
+        )
+        return response.to_dict(), 500
 
     with app.app_context():
         db.create_all()

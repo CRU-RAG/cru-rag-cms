@@ -5,7 +5,7 @@ import json
 from uuid import uuid4
 from app.models.content import Content
 from app.extensions import DB as db
-from app.tests.integration.base_test import BaseTestCase
+from app.tests.integration.base_test_class import BaseTestCase
 
 
 class ContentIntegrationTestCase(BaseTestCase):

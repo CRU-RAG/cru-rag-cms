@@ -2,17 +2,17 @@
 
 from datetime import datetime
 from uuid import uuid4
-from sqlalchemy import and_
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from marshmallow import fields
 from ..extensions import DB as db
-from ..models.comment import CommentSchema, Comment
+from ..models.comment import Comment, CommentSchema
 
 
 class Content(db.Model):
     """Content Model"""
 
     __tablename__ = "content"
+    __table_args__ = {"extend_existing": True}
 
     id = db.Column(db.String(100), primary_key=True)
     title = db.Column(db.String(100), nullable=False)
@@ -24,7 +24,6 @@ class Content(db.Model):
     # Add relationship to comments
     comments = db.relationship(
         "Comment",
-        primaryjoin=and_(Comment.content_id == id, Comment.deleted_at is None),
         backref="content",
         lazy="dynamic",
     )
@@ -61,8 +60,15 @@ class Content(db.Model):
 class ContentSchema(SQLAlchemyAutoSchema):
     """Content Schema"""
 
-    # Include comments in serialization
-    comments = fields.Nested(CommentSchema, many=True)
+    # Include comments in serialization, filter out deleted comments
+    comments = fields.Method("get_active_comments")
+
+    def get_active_comments(self, obj):
+        """Method to get non-deleted comments"""
+
+        return CommentSchema(many=True).dump(
+            obj.comments.filter(Comment.deleted_at.is_(None)).all()
+        )
 
     class Meta:
         """Meta class for Content Schema"""
