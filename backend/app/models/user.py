@@ -11,7 +11,7 @@ from ..extensions import DB as db
 class User(db.Model):
     """Users model"""
 
-    __tablename__ = "users"
+    __tablename__ = "user"
 
     id = db.Column(db.String(100), primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)

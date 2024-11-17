@@ -1,7 +1,6 @@
 """Definitions of user resources."""
 
 from datetime import datetime
-from uuid import uuid4
 from flask import request
 from flask_jwt_extended import jwt_required
 
@@ -59,7 +58,6 @@ class UserListResource(BaseResource):
                 message="Unable to create user", error="User already exists", status=400
             )
         new_user = create_user_instance(data)
-        new_user.id = str(uuid4())
         db.session.add(new_user)
         db.session.commit()
         user_schema = USER_SCHEMAS.get(new_user.role, RegularUserSchema())

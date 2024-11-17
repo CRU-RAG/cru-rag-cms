@@ -39,14 +39,12 @@ class ContentIntegrationTestCase(BaseTestCase):
             # Seed some contents
             with self.app.app_context():
                 content1 = Content(
-                    id=str(uuid4()),
                     title="Content 1",
-                    content="This is the first content.",
+                    body="This is the first content.",
                 )
                 content2 = Content(
-                    id=str(uuid4()),
                     title="Content 2",
-                    content="This is the second content.",
+                    body="This is the second content.",
                 )
                 db.session.add_all([content1, content2])
                 db.session.commit()
@@ -65,7 +63,7 @@ class ContentIntegrationTestCase(BaseTestCase):
             response = self.client.post(
                 "/contents",
                 headers=headers,
-                json={"title": "New Content", "content": "This is new content."},
+                json={"title": "New Content", "body": "This is new content."},
             )
             self.assertEqual(response.status_code, 201)
             data = json.loads(response.data)
@@ -81,7 +79,7 @@ class ContentIntegrationTestCase(BaseTestCase):
                 headers=headers,
                 json={
                     "title": "Unauthorized Content",
-                    "content": "Should not be allowed.",
+                    "body": "Should not be allowed.",
                 },
             )
             self.assertEqual(response.status_code, 403)
@@ -92,9 +90,8 @@ class ContentIntegrationTestCase(BaseTestCase):
             # Seed a content
             with self.app.app_context():
                 content = Content(
-                    id=str(uuid4()),
                     title="Sample Content",
-                    content="This is a sample content.",
+                    body="This is a sample content.",
                 )
                 db.session.add(content)
                 db.session.commit()
@@ -112,9 +109,7 @@ class ContentIntegrationTestCase(BaseTestCase):
         with self.client:
             # Seed a content
             with self.app.app_context():
-                content = Content(
-                    id=str(uuid4()), title="Old Title", content="Old content."
-                )
+                content = Content(title="Old Title", body="Old content.")
                 db.session.add(content)
                 db.session.commit()
                 content_id = content.id
@@ -123,7 +118,7 @@ class ContentIntegrationTestCase(BaseTestCase):
             response = self.client.put(
                 f"/contents/{content_id}",
                 headers=headers,
-                json={"title": "Updated Title", "content": "Updated content."},
+                json={"title": "Updated Title", "body": "Updated content."},
             )
             self.assertEqual(response.status_code, 200)
             data = json.loads(response.data)
@@ -136,9 +131,8 @@ class ContentIntegrationTestCase(BaseTestCase):
             # Seed a content
             with self.app.app_context():
                 content = Content(
-                    id=str(uuid4()),
                     title="Unchangeable Content",
-                    content="Content that should not be updated by regular users.",
+                    body="Content that should not be updated by regular users.",
                 )
                 db.session.add(content)
                 db.session.commit()
@@ -160,9 +154,7 @@ class ContentIntegrationTestCase(BaseTestCase):
         with self.client:
             # Seed a content
             with self.app.app_context():
-                content = Content(
-                    id=str(uuid4()), title="Delete Me", content="Content to be deleted."
-                )
+                content = Content(title="Delete Me", body="Content to be deleted.")
                 db.session.add(content)
                 db.session.commit()
                 content_id = content.id
@@ -179,9 +171,8 @@ class ContentIntegrationTestCase(BaseTestCase):
             # Seed a content
             with self.app.app_context():
                 content = Content(
-                    id=str(uuid4()),
                     title="Protected Content",
-                    content="Regular users should not delete this.",
+                    body="Regular users should not delete this.",
                 )
                 db.session.add(content)
                 db.session.commit()

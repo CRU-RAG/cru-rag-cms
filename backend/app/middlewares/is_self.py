@@ -8,7 +8,7 @@ from flask import abort
 def is_self(f):
     """Decorator to check if users are accessing their own data"""
 
-    @wraps
+    @wraps(f)
     def wrapper(*args, **kwargs):
         verify_jwt_in_request()
         current_user_id = get_jwt_identity()
