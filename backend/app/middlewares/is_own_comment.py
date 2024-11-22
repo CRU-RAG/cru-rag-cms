@@ -3,7 +3,7 @@
 from functools import wraps
 from flask import abort
 
-from app.utils.comment_helpers import get_comment_and_user
+from app.services.comment_services import get_comment_and_user
 
 
 def is_own_comment(f):
