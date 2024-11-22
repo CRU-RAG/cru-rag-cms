@@ -5,7 +5,6 @@ from uuid import uuid4
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from marshmallow import fields
 from ..extensions import DB as db
-from ..models.comment import Comment, CommentSchema
 
 
 class Content(db.Model):
@@ -24,7 +23,7 @@ class Content(db.Model):
     # Add relationship to comments
     comments = db.relationship(
         "Comment",
-        backref="content",
+        back_populates="content",
         lazy="dynamic",
     )
 
@@ -56,19 +55,17 @@ class Content(db.Model):
                   '{self.updated_at}', '{self.deleted_at}'"
 
 
+# pylint: disable=wrong-import-position
+# pylint: disable=unused-import
+# pylint: disable=cyclic-import
+from .comment import Comment
+
+
 # pylint: disable=too-few-public-methods
 class ContentSchema(SQLAlchemyAutoSchema):
     """Content Schema"""
 
-    # Include comments in serialization, filter out deleted comments
-    comments = fields.Method("get_active_comments")
-
-    def get_active_comments(self, obj):
-        """Method to get non-deleted comments"""
-
-        return CommentSchema(many=True).dump(
-            obj.comments.filter(Comment.deleted_at.is_(None)).all()
-        )
+    comments = fields.Nested("CommentSchema", many=True, exclude=("content",))
 
     class Meta:
         """Meta class for Content Schema"""

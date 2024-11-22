@@ -12,6 +12,7 @@ class User(db.Model):
     """Users model"""
 
     __tablename__ = "users"
+    __table_args__ = {"extend_existing": True}
 
     id = db.Column(db.String(100), primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)

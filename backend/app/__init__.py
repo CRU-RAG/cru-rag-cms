@@ -8,6 +8,7 @@ from flask_bcrypt import Bcrypt
 from flask_limiter import Limiter
 from flask_restful import Api
 
+from app.models import User, RegularUser, EditorUser, AdminUser, Content, Comment
 from app.resources.comment_resources import CommentListResource, CommentResource
 from .resources.content_resources import ContentListResource, ContentResource
 from .resources.auth_resources import UserRegisterResource, UserLoginResource
