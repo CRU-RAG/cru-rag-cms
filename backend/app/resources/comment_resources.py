@@ -5,7 +5,7 @@ from flask import request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from app.middlewares.is_own_comment import is_own_comment
-from app.middlewares.is_own_comment_or_accessed_by_admin import (
+from app.middlewares.is_own_comment_or_is_admin_access import (
     is_own_comment_or_accessed_by_admin,
 )
 
