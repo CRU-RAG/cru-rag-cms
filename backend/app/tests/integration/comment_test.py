@@ -35,6 +35,20 @@ class CommentIntegrationTestCase(BaseTestCase):
             db.session.commit()
             self.content_id = content.id
 
+    def create_comment(self):
+        """Helper method to create comment"""
+        headers = self.get_auth_headers(self.regular_user_id)
+        response = self.client.post(
+            "/comments",
+            headers=headers,
+            json={
+                "content_id": self.content_id,
+                "comment_text": "This is a test comment.",
+            },
+        )
+        data = json.loads(response.data)
+        self.comment_id = data["payload"]["id"]
+
     def test_create_comment(self):
         """Test creating a comment"""
         with self.client:
