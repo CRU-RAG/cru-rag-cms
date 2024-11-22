@@ -11,7 +11,7 @@ from ..models.comment import Comment, CommentSchema
 class Content(db.Model):
     """Content Model"""
 
-    __tablename__ = "content"
+    __tablename__ = "contents"
     __table_args__ = {"extend_existing": True}
 
     id = db.Column(db.String(100), primary_key=True)

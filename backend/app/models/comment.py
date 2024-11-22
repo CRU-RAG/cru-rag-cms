@@ -10,7 +10,7 @@ from ..extensions import DB as db
 class Comment(db.Model):
     """Comment model representing user comments on content."""
 
-    __tablename__ = "comment"
+    __tablename__ = "comments"
 
     id = db.Column(db.String(100), primary_key=True)
     user_id = db.Column(db.String(100), db.ForeignKey("user.id"), nullable=False)
