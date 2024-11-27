@@ -22,8 +22,6 @@ class Comment(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.now(), nullable=False)
     deleted_at = db.Column(db.DateTime, nullable=True)
 
-    content = db.relationship("Content", back_populates="comments")
-
     def __init__(self, user_id, content_id, comment_text):
         """Initialize a comment."""
         self.id = str(uuid4())
@@ -33,12 +31,6 @@ class Comment(db.Model):
 
     def __repr__(self):
         return f"<Comment {self.id}>"
-
-
-# pylint: disable=wrong-import-position
-# pylint: disable=unused-import
-# pylint: disable=cyclic-import
-from .content import Content
 
 
 class CommentSchema(SQLAlchemyAutoSchema):

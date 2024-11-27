@@ -1,10 +1,12 @@
 """Content Model"""
 
+# pylint: disable=unused-import
 from datetime import datetime
 from uuid import uuid4
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from marshmallow import fields
 from ..extensions import DB as db
+from .comment import Comment
 
 
 class Content(db.Model):
@@ -23,7 +25,7 @@ class Content(db.Model):
     # Add relationship to comments
     comments = db.relationship(
         "Comment",
-        back_populates="content",
+        backref="content",
         lazy="dynamic",
     )
 
@@ -53,12 +55,6 @@ class Content(db.Model):
         return f"\
             Item('{self.title}', '{self.body}'), '{self.created_at}',\
                   '{self.updated_at}', '{self.deleted_at}'"
-
-
-# pylint: disable=wrong-import-position
-# pylint: disable=unused-import
-# pylint: disable=cyclic-import
-from .comment import Comment
 
 
 # pylint: disable=too-few-public-methods
