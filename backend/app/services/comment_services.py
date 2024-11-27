@@ -6,7 +6,7 @@ from app.models.comment import Comment
 
 
 def get_comment_and_user(**kwargs):
-    """Helper to retrieve the current user and comment."""
+    """Service to retrieve the current user and comment."""
     verify_jwt_in_request()
     current_user_id = get_jwt_identity()
     comment_id = kwargs.get("comment_id")
