@@ -3,7 +3,7 @@
 import json
 import unittest
 from app.extensions import DB as db
-from app.tests.integration.base_test import BaseTestCase
+from app.tests.integration.base_test_class import BaseTestCase
 
 
 class UserIntegrationTestCase(BaseTestCase):

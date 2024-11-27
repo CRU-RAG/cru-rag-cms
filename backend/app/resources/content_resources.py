@@ -2,7 +2,6 @@
 
 from datetime import datetime
 import json
-from uuid import uuid4
 from flask import request
 from flask_jwt_extended import jwt_required
 
@@ -43,8 +42,7 @@ class ContentListResource(BaseResource):
     def post(self):
         """Method to create a new content."""
         data = request.get_json()
-        data["id"] = str(uuid4())
-        content = CONTENT_SCHEMA.load(data, session=db.session)
+        content = Content(title=data["title"], body=data["body"])
         db.session.add(content)
         db.session.commit()
 
@@ -53,7 +51,7 @@ class ContentListResource(BaseResource):
             "op": "create",
             "id": content.id,
             "title": content.title,
-            "content": content.content,
+            "body": content.body,
         }
         PRODUCER.publish_message(json.dumps(message))
         return self.make_response(
@@ -104,7 +102,7 @@ class ContentResource(BaseResource):
             "op": "update",
             "id": content.id,
             "title": content.title,
-            "content": content.content,
+            "body": content.body,
         }
         PRODUCER.publish_message(json.dumps(message))
         return self.make_response(
